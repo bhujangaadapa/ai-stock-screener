@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FirestoreStockService } from '../services/firestore-stock.service';
@@ -6,6 +6,7 @@ import { AiScreenerService, AIScreenResult } from '../services/ai-screener.servi
 import { Stock, ScreenerViewMode, StockFilterCriteria, SectorPerformance } from '../models/stock.model';
 import { StockChartModalComponent } from './stock-chart-modal.component';
 import { StockDetailModalComponent } from './stock-detail-modal.component';
+import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
 
 @Component({
   selector: 'app-stock-scanner',
@@ -14,7 +15,8 @@ import { StockDetailModalComponent } from './stock-detail-modal.component';
     CommonModule,
     FormsModule,
     StockChartModalComponent,
-    StockDetailModalComponent
+    StockDetailModalComponent,
+    StrategyLifecycleComponent
   ],
   template: `
     <div class="scanner-root">
@@ -168,6 +170,12 @@ import { StockDetailModalComponent } from './stock-detail-modal.component';
               [class.active]="currentMainTab() === 'watchlist'" 
               (click)="currentMainTab.set('watchlist')">
               â­ Watchlist ({{ stockService.watchlist().length }})
+            </button>
+            <button 
+              class="view-tab-btn" 
+              [class.active]="currentMainTab() === 'strategy'" 
+              (click)="currentMainTab.set('strategy')">
+              🚀 Strategy Lifecycle & Lab
             </button>
           </div>
 
@@ -367,10 +375,13 @@ import { StockDetailModalComponent } from './stock-detail-modal.component';
                   <td class="text-center" (click)="$event.stopPropagation()">
                     <div class="actions-cell">
                       <button class="action-btn chart-action" (click)="openChart(stock)" title="Interactive Candlestick Chart">
-                        ðŸ“Š Chart
+                        📊 Chart
                       </button>
                       <button class="action-btn ai-action" (click)="openAiDossier(stock)" title="AI Conviction Dossier">
-                        ðŸ§  Dossier
+                        🧠 Dossier
+                      </button>
+                      <button class="action-btn strategy-action" (click)="launchStrategyLab(stock)" title="Launch Strategy Lifecycle & Backtest Lab">
+                        ⚡ Strategy
                       </button>
                     </div>
                   </td>
@@ -468,6 +479,11 @@ import { StockDetailModalComponent } from './stock-detail-modal.component';
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- ================= VIEW 4: STRATEGY LIFECYCLE LAB ================= -->
+        <div *ngIf="currentMainTab() === 'strategy'" class="strategy-section">
+          <app-strategy-lifecycle></app-strategy-lifecycle>
         </div>
       </div>
 
@@ -1004,6 +1020,7 @@ import { StockDetailModalComponent } from './stock-detail-modal.component';
     .action-btn:hover { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
     .chart-action:hover { border-color: #38bdf8; }
     .ai-action:hover { border-color: #a855f7; color: #c084fc; }
+    .strategy-action:hover { border-color: #a855f7; color: #c084fc; }
 
     /* Heatmap Grid */
     .heatmap-section { display: flex; flex-direction: column; gap: 1rem; }
@@ -1048,7 +1065,7 @@ export class StockScannerComponent {
   readonly aiScreener = inject(AiScreenerService);
 
   // Active View Tabs
-  readonly currentMainTab = signal<'screener' | 'heatmap' | 'watchlist'>('screener');
+  readonly currentMainTab = signal<'screener' | 'heatmap' | 'watchlist' | 'strategy'>('screener');
   readonly activeViewMode = signal<ScreenerViewMode>('overview');
 
   // AI & Search state
@@ -1228,6 +1245,10 @@ export class StockScannerComponent {
 
   openAiDossier(stock: Stock) {
     this.selectedDossierStock.set(stock);
+  }
+
+  launchStrategyLab(stock: Stock) {
+    this.currentMainTab.set('strategy');
   }
 
   getScorePillClass(score: number): string {

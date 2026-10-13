@@ -74,6 +74,14 @@ Production assets are generated in `dist/ai-stock-screener`.
 * **1-Click Database Seeder**: Click the **⚡ Seed Firestore** button in the header to batch-upload 100+ equities with financials and historical candlestick data directly to your Firestore database.
 * Local fallback: Works instantly out-of-the-box even before Firebase credentials are configured.
 
+### 8. Full Quantitative Strategy Development Lifecycle & Quant Lab
+* **Stage 1 (Idea Generation & Economic Hypothesis)**: Pre-built institutional archetypes (Danelfin AI Multi-Factor Momentum, Golden Cross Trend Following, RSI Mean Reversion, Bollinger Squeeze, MACD Trend) with economic rationale documentation to eliminate data snooping.
+* **Stage 2 (Historical In-Sample Backtest)**: Bar-by-bar chronological execution with slippage & commission friction modeling. Interactive SVG equity curve, underwater drawdown profile, and complete trade blotter with Sharpe, Sortino, Calmar, and Win Rate metrics.
+* **Stage 3 (Walk-Forward & Out-of-Sample Validation)**: 70/30 train-test split, Overfitting Risk Gauge, Sharpe Retention Ratio, and vectorized parameter sensitivity stress testing (vectorbt style).
+* **Stage 4 (Paper Trading Simulator)**: Virtual \$100k account with live tick engine, interactive order tickets, active position marking-to-market, and execution slippage simulation.
+* **Stage 5 (Small Live Capital & Risk Management)**: Mathematical Kelly Criterion position sizing calculator, live capital allocation controls, and automated circuit breakers (daily loss limits & max drawdown emergency kill-switch).
+* **Educational Learning Lab & Python Bridge**: 1-click Python script generator exporting runnable code for the `yfinance` + `pandas-ta` + `backtesting.py` + `quantstats` stack.
+
 ---
 
 ## 📁 Project Architecture
@@ -96,15 +104,19 @@ ai-stock-screener/
         ├── app.config.ts               (Angular providers & Firebase app init)
         ├── app.ts                      (Root application component)
         ├── models/
-        │   └── stock.model.ts          (Stock, AIScoreBreakdown, HistoricalCandle interfaces)
+        │   ├── stock.model.ts          (Stock, AIScoreBreakdown, HistoricalCandle interfaces)
+        │   └── strategy-lifecycle.model.ts (Strategy config, backtest metrics, paper account, risk)
         ├── services/
         │   ├── ai-screener.service.ts      (NLP conversational query parser & filter engine)
         │   ├── quant-scoring.service.ts    (Danelfin-style 1-10 AI scoring algorithm)
-        │   └── firestore-stock.service.ts  (Firestore CRUD, live listeners, seeder, watchlist)
+        │   ├── firestore-stock.service.ts  (Firestore CRUD, live listeners, seeder, watchlist)
+        │   └── strategy-engine.service.ts  (Backtest engine, indicators, walk-forward, paper bot, Kelly)
         ├── data/
-        │   └── stock-universe.data.ts  (Rich 100+ stock universe with OHLCV candle generator)
+        │   └── stock-universe.data.ts  (Rich 100+ stock universe with 220-day OHLCV candle generator)
         └── components/
             ├── stock-scanner.component.ts      (Main dashboard, ticker tape, table, heatmap)
             ├── stock-chart-modal.component.ts  (Interactive candlestick & RSI chart modal)
-            └── stock-detail-modal.component.ts (AI investment conviction dossier modal)
+            ├── stock-detail-modal.component.ts (AI investment conviction dossier modal)
+            └── strategy-lifecycle.component.ts (5-stage strategy lifecycle, KPI cards, paper bot)
 ```
+

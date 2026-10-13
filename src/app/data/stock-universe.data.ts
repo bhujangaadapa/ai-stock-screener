@@ -3,7 +3,7 @@ import { HistoricalCandle, Stock } from '../models/stock.model';
 // Helper to generate 90 daily OHLCV candles leading up to the current price
 function generateCandles(currentPrice: number, volatility: number = 0.02): { candles: HistoricalCandle[], sparkline: number[] } {
   const candles: HistoricalCandle[] = [];
-  const days = 90;
+  const days = 220;
   let price = currentPrice * (1 - (Math.random() * 0.15 - 0.05)); // starting price ~3 months ago
   const now = new Date();
 
