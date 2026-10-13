@@ -82,6 +82,13 @@ Production assets are generated in `dist/ai-stock-screener`.
 * **Stage 5 (Small Live Capital & Risk Management)**: Mathematical Kelly Criterion position sizing calculator, live capital allocation controls, and automated circuit breakers (daily loss limits & max drawdown emergency kill-switch).
 * **Educational Learning Lab & Python Bridge**: 1-click Python script generator exporting runnable code for the `yfinance` + `pandas-ta` + `backtesting.py` + `quantstats` stack.
 
+### 9. 🎓 Georgia Tech CS 7646 (Machine Learning for Trading) Lab
+* **Project 6 • Theoretically Optimal Strategy (TOS)**: Perfect foresight look-ahead benchmark establishing the theoretical upper bound (holds +1,000 shares before positive days, -1,000 shares before negative days) with institutional friction ($9.95 commission, 0.005 / 50 bps market impact).
+* **Project 2 • Optimize Something (Markowitz Portfolio Optimization)**: Solves for optimal portfolio asset weights using mean-variance optimization to maximize the annualized Sharpe ratio.
+* **Project 5 • Marketsim Engine (`marketsimcode`)**: Event-driven order book parser and portfolio accountant tracking daily valuations, mean returns, and standard deviation with transaction fees.
+* **Project 8 • Strategy Learner (Q-Learning Reinforcement Learning)**: Tabular Q-Learner agent discretizing Bollinger Bands %B, Price/SMA 50, and Momentum into 27 discrete market states with live interactive training curve.
+* **1-Click Python Script Exporters**: Exports ready-to-run Python code for Georgia Tech CS 7646 assignments (`TheoreticallyOptimalStrategy.py`, `optimization.py`, `marketsim.py`, `StrategyLearner.py`).
+
 ---
 
 ## 📁 Project Architecture

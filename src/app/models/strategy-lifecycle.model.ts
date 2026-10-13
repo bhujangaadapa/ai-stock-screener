@@ -169,3 +169,67 @@ export interface LiveRiskSettings {
   killSwitchActive: boolean;
   executionDragBpsTracked: number; // Difference between paper test and live fills
 }
+
+// ==========================================
+// GEORGIA TECH CS 7646 (ML4T) MODELS
+// ==========================================
+export type ML4TProjectTab = 'TOS' | 'PORTFOLIO_OPTIMIZATION' | 'MARKETSIM' | 'Q_LEARNING';
+
+export interface TOSResult {
+  symbol: string;
+  initialCash: number;
+  finalEquity: number;
+  cumulativeReturnPercent: number;
+  sharpeRatio: number;
+  totalTrades: number;
+  longDays: number;
+  shortDays: number;
+  cashDays: number;
+  equityCurve: { date: string; tosEquity: number; benchmarkEquity: number }[];
+}
+
+export interface PortfolioOptimizationResult {
+  tickers: string[];
+  optimalWeights: { ticker: string; weight: number }[];
+  expectedReturnPercent: number;
+  volatilityPercent: number;
+  optimizedSharpeRatio: number;
+  benchmarkSharpeRatio: number;
+}
+
+export interface MarketsimOrder {
+  date: string;
+  symbol: string;
+  order: 'BUY' | 'SELL';
+  shares: number;
+}
+
+export interface MarketsimResult {
+  startVal: number;
+  endVal: number;
+  cumulativeReturnPercent: number;
+  avgDailyReturnPercent: number;
+  stdDailyReturnPercent: number;
+  sharpeRatio: number;
+  commissionPaidTotal: number;
+  impactCostTotal: number;
+  history: { date: string; portfolioValue: number; cash: number }[];
+}
+
+export interface QLearningStepResult {
+  episode: number;
+  cumulativeReward: number;
+  finalPortfolioValue: number;
+  sharpeRatio: number;
+  tradesCount: number;
+}
+
+export interface QLearningResult {
+  symbol: string;
+  episodes: QLearningStepResult[];
+  trainedReturnPercent: number;
+  trainedSharpeRatio: number;
+  benchmarkReturnPercent: number;
+  qTableSize: number;
+  bestEquityCurve: { date: string; qEquity: number; benchmarkEquity: number }[];
+}

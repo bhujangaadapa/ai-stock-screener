@@ -13,7 +13,12 @@ import {
   TradeRecord,
   EquityPoint,
   PaperOrder,
-  PaperPosition
+  PaperPosition,
+  ML4TProjectTab,
+  TOSResult,
+  PortfolioOptimizationResult,
+  MarketsimResult,
+  QLearningResult
 } from '../models/strategy-lifecycle.model';
 
 export type LifecycleStage = 1 | 2 | 3 | 4 | 5;
@@ -36,9 +41,13 @@ export type LifecycleStage = 1 | 2 | 3 | 4 | 5;
         </div>
         
         <div class="banner-actions">
+          <button class="learn-toggle-btn ml4t-pill" [class.active-lab]="activeView() === 'ml4t'" (click)="toggleMl4tView()">
+            <span class="icon">🎓</span>
+            <span>{{ activeView() === 'ml4t' ? 'Back to 5-Stage Lifecycle' : 'Georgia Tech ML4T Lab' }}</span>
+          </button>
           <button class="learn-toggle-btn" (click)="showLearningLab.set(!showLearningLab())">
             <span class="icon">📚</span>
-            <span>{{ showLearningLab() ? 'Hide Learning Lab' : 'Open Quant Stacks Lab' }}</span>
+            <span>{{ showLearningLab() ? 'Hide Quant Stacks' : 'Quant Stacks Hub' }}</span>
           </button>
         </div>
       </div>
@@ -90,6 +99,7 @@ export type LifecycleStage = 1 | 2 | 3 | 4 | 5;
       </div>
 
       <!-- 5-Stage Interactive Chevron Pipeline Tracker -->
+      <ng-container *ngIf="activeView() === 'lifecycle'">
       <div class="pipeline-bar">
         <div 
           class="stage-step" 
@@ -933,6 +943,358 @@ export type LifecycleStage = 1 | 2 | 3 | 4 | 5;
             </div>
           </div>
         </div>
+      </div>
+      </ng-container>
+
+      <!-- ======================================================== -->
+      <!-- GEORGIA TECH CS 7646 (ML4T) PROJECTS LAB                 -->
+      <!-- ======================================================== -->
+      <div *ngIf="activeView() === 'ml4t'" class="stage-container ml4t-lab-box">
+        <div class="stage-header-row">
+          <div>
+            <div class="gt-badge">GEORGIA INSTITUTE OF TECHNOLOGY • CS 7646</div>
+            <h3 class="stage-title">Machine Learning for Trading (ML4T) Projects</h3>
+            <p class="stage-intro">
+              Interactive implementations of Tucker Balch's foundational OMSCS quantitative finance curriculum.
+            </p>
+          </div>
+          <button class="secondary-action-btn" (click)="toggleMl4tView()">
+            ◀ Return to 5-Stage Lifecycle
+          </button>
+        </div>
+
+        <!-- ML4T Project Tabs -->
+        <div class="ml4t-tabs-nav">
+          <button 
+            class="ml4t-tab-btn" 
+            [class.active]="activeMl4tTab() === 'TOS'"
+            (click)="selectMl4tTab('TOS')">
+            🥇 Project 6: Theoretically Optimal Strategy (TOS)
+          </button>
+          <button 
+            class="ml4t-tab-btn" 
+            [class.active]="activeMl4tTab() === 'PORTFOLIO_OPTIMIZATION'"
+            (click)="selectMl4tTab('PORTFOLIO_OPTIMIZATION')">
+            ⚖️ Project 2: Optimize Something (Markowitz MPT)
+          </button>
+          <button 
+            class="ml4t-tab-btn" 
+            [class.active]="activeMl4tTab() === 'MARKETSIM'"
+            (click)="selectMl4tTab('MARKETSIM')">
+            ⚡ Project 5: Marketsim (Market Simulator)
+          </button>
+          <button 
+            class="ml4t-tab-btn" 
+            [class.active]="activeMl4tTab() === 'Q_LEARNING'"
+            (click)="selectMl4tTab('Q_LEARNING')">
+            🤖 Project 8: Strategy Learner (Q-Learning RL)
+          </button>
+        </div>
+
+        <!-- PROJECT 6: THEORETICALLY OPTIMAL STRATEGY -->
+        <div *ngIf="activeMl4tTab() === 'TOS'" class="ml4t-content">
+          <div class="stage-grid">
+            <div class="config-panel">
+              <h4 class="panel-heading">The Perfect Foresight Benchmark</h4>
+              <p class="project-summary">
+                <strong>What it teaches:</strong> TOS peeks 1 trading day ahead into future price movements. If tomorrow's price is higher, it holds +1,000 shares (LONG); if lower, it holds -1,000 shares (SHORT).
+              </p>
+              <div class="edge-box">
+                <strong>Why This Matters in Systematic Trading:</strong>
+                <p>No model can legally or realistically beat TOS. It establishes the <em>absolute theoretical upper bound</em> of achievable profit, serving as the ultimate reference ceiling for your real machine learning models.</p>
+              </div>
+
+              <div class="form-group">
+                <label>Target Asset:</label>
+                <select class="form-control" [(ngModel)]="selectedTicker" (change)="runTOS()">
+                  <option *ngFor="let s of availableStocks()" [value]="s.symbol">{{ s.symbol }} • {{ s.name }}</option>
+                </select>
+              </div>
+
+              <div class="params-row">
+                <div class="param-item">
+                  <label>Commission ($):</label>
+                  <input type="number" [(ngModel)]="gtCommission" step="1" />
+                </div>
+                <div class="param-item">
+                  <label>Market Impact:</label>
+                  <input type="number" [(ngModel)]="gtImpact" step="0.001" />
+                </div>
+              </div>
+
+              <button class="primary-action-btn full-w" (click)="runTOS()">
+                ⚡ Re-Compute TOS Benchmark
+              </button>
+            </div>
+
+            <!-- TOS Results & Chart -->
+            <div class="hypothesis-panel" *ngIf="tosResult() as tos">
+              <div class="kpi-grid">
+                <div class="kpi-card positive">
+                  <span class="kpi-label">TOS Cumulative Return</span>
+                  <span class="kpi-val">+{{ tos.cumulativeReturnPercent }}%</span>
+                  <span class="kpi-sub">Theoretical ceiling for {{ tos.symbol }}</span>
+                </div>
+                <div class="kpi-card good-sharpe">
+                  <span class="kpi-label">TOS Sharpe Ratio</span>
+                  <span class="kpi-val">{{ tos.sharpeRatio }}</span>
+                  <span class="kpi-sub">Upper bound risk-adjusted return</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Trades Executed</span>
+                  <span class="kpi-val">{{ tos.totalTrades }}</span>
+                  <span class="kpi-sub">{{ tos.longDays }} Long / {{ tos.shortDays }} Short</span>
+                </div>
+              </div>
+
+              <!-- SVG Chart for TOS vs Benchmark -->
+              <div class="chart-box">
+                <div class="chart-header">
+                  <div class="chart-title">
+                    <span>🥇 TOS vs Buy & Hold Benchmark</span>
+                    <span class="sub">TOS Final Equity: \${{ tos.finalEquity | number }}</span>
+                  </div>
+                  <div class="chart-legend">
+                    <span class="legend-item"><span class="dot yellow"></span> TOS Ceiling</span>
+                    <span class="legend-item"><span class="dot blue"></span> Buy & Hold</span>
+                  </div>
+                </div>
+                <div class="svg-container">
+                  <svg class="equity-svg" viewBox="0 0 900 200" preserveAspectRatio="none">
+                    <polyline 
+                      [attr.points]="generateSvgPoints(tos.equityCurve, 'benchmarkEquity', 900, 200)" 
+                      fill="none" 
+                      stroke="#38bdf8" 
+                      stroke-width="2" 
+                      stroke-dasharray="3" />
+                    <polyline 
+                      [attr.points]="generateSvgPoints(tos.equityCurve, 'tosEquity', 900, 200)" 
+                      fill="none" 
+                      stroke="#fbbf24" 
+                      stroke-width="3" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Python Code Export -->
+              <div class="python-export-card">
+                <div class="export-header">
+                  <span class="export-tag">GEORGIA TECH TOS (TheoreticallyOptimalStrategy.py)</span>
+                  <button class="copy-btn" (click)="copyMl4tCode('TOS')">
+                    {{ copiedMl4tPython() ? '✓ Copied!' : '📋 Copy Code' }}
+                  </button>
+                </div>
+                <pre class="code-preview"><code>{{ engine.generateML4TPythonScript('TOS', selectedTicker) }}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 2: PORTFOLIO OPTIMIZATION (MARKOWITZ) -->
+        <div *ngIf="activeMl4tTab() === 'PORTFOLIO_OPTIMIZATION'" class="ml4t-content">
+          <div class="stage-grid">
+            <div class="config-panel">
+              <h4 class="panel-heading">Markowitz Mean-Variance Sharpe Maximizer</h4>
+              <p class="project-summary">
+                <strong>What it teaches:</strong> Uses modern portfolio theory to find the vector of asset weights that maximizes the annualized Sharpe ratio.
+              </p>
+              <div class="edge-box">
+                <strong>The Diversification Free Lunch:</strong>
+                <p>Combining uncorrelated assets reduces total portfolio variance faster than it reduces expected return, boosting risk-adjusted Sharpe.</p>
+              </div>
+
+              <button class="primary-action-btn full-w" (click)="runPortfolioOpt()">
+                ⚖️ Solve Optimal Asset Weights
+              </button>
+            </div>
+
+            <div class="hypothesis-panel" *ngIf="portfolioOptResult() as po">
+              <div class="kpi-grid">
+                <div class="kpi-card good-sharpe">
+                  <span class="kpi-label">Optimized Sharpe Ratio</span>
+                  <span class="kpi-val">{{ po.optimizedSharpeRatio }}</span>
+                  <span class="kpi-sub">vs Equal-Weight {{ po.benchmarkSharpeRatio }}</span>
+                </div>
+                <div class="kpi-card positive">
+                  <span class="kpi-label">Expected Annual Return</span>
+                  <span class="kpi-val">+{{ po.expectedReturnPercent }}%</span>
+                  <span class="kpi-sub">Annualized expectation</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Portfolio Volatility</span>
+                  <span class="kpi-val">{{ po.volatilityPercent }}%</span>
+                  <span class="kpi-sub">Annualized risk</span>
+                </div>
+              </div>
+
+              <!-- Optimal Weights Table -->
+              <div class="trades-box">
+                <h4>Optimal Asset Allocation Weights</h4>
+                <table class="quant-table">
+                  <thead>
+                    <tr>
+                      <th>Asset Ticker</th>
+                      <th>Optimal Weight</th>
+                      <th>Allocation Bar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let w of po.optimalWeights">
+                      <td><strong>{{ w.ticker }}</strong></td>
+                      <td><strong>{{ (w.weight * 100).toFixed(1) }}%</strong></td>
+                      <td>
+                        <div class="v-bar-track" style="height: 12px; width: 140px; display: inline-flex;">
+                          <div class="v-bar-fill" [style.width.%]="w.weight * 100" style="background: #3b82f6; height: 100%;"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="python-export-card">
+                <div class="export-header">
+                  <span class="export-tag">GEORGIA TECH OPTIMIZATION (optimization.py)</span>
+                  <button class="copy-btn" (click)="copyMl4tCode('PORTFOLIO_OPTIMIZATION')">
+                    {{ copiedMl4tPython() ? '✓ Copied!' : '📋 Copy Code' }}
+                  </button>
+                </div>
+                <pre class="code-preview"><code>{{ engine.generateML4TPythonScript('PORTFOLIO_OPTIMIZATION', selectedTicker) }}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 5: MARKETSIM -->
+        <div *ngIf="activeMl4tTab() === 'MARKETSIM'" class="ml4t-content">
+          <div class="stage-grid">
+            <div class="config-panel">
+              <h4 class="panel-heading">Event-Driven Market Simulator (marketsimcode)</h4>
+              <p class="project-summary">
+                <strong>What it teaches:</strong> Real trade order accounting. Processes chronological BUY and SELL orders, deducting brokerage commissions ($9.95 standard GT fee) and market impact (0.005 / 50 bps spread crossing).
+              </p>
+              <div class="trap-warning">
+                <strong>Why Backtests Overestimate Profit:</strong>
+                <p>Ignoring market impact means assuming you can trade unlimited size at the current price. Georgia Tech's Marketsim penalizes large orders by adjusting execution price against you.</p>
+              </div>
+
+              <button class="primary-action-btn full-w" (click)="runMarketsimTest()">
+                ⚡ Run Marketsim Engine
+              </button>
+            </div>
+
+            <div class="hypothesis-panel" *ngIf="marketsimResult() as ms">
+              <div class="kpi-grid">
+                <div class="kpi-card" [class.positive]="ms.cumulativeReturnPercent >= 0" [class.negative]="ms.cumulativeReturnPercent < 0">
+                  <span class="kpi-label">Cumulative Return</span>
+                  <span class="kpi-val">{{ ms.cumulativeReturnPercent >= 0 ? '+' : '' }}{{ ms.cumulativeReturnPercent }}%</span>
+                  <span class="kpi-sub">Final Val: \${{ ms.endVal | number }}</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Sharpe Ratio</span>
+                  <span class="kpi-val">{{ ms.sharpeRatio }}</span>
+                  <span class="kpi-sub">Mean Daily: {{ ms.avgDailyReturnPercent }}%</span>
+                </div>
+                <div class="kpi-card negative">
+                  <span class="kpi-label">Friction Paid</span>
+                  <span class="kpi-val">\${{ ms.commissionPaidTotal + ms.impactCostTotal | number }}</span>
+                  <span class="kpi-sub">Commissions: \${{ ms.commissionPaidTotal }} | Impact: \${{ ms.impactCostTotal }}</span>
+                </div>
+              </div>
+
+              <div class="python-export-card">
+                <div class="export-header">
+                  <span class="export-tag">GEORGIA TECH MARKETSIM (marketsim.py)</span>
+                  <button class="copy-btn" (click)="copyMl4tCode('MARKETSIM')">
+                    {{ copiedMl4tPython() ? '✓ Copied!' : '📋 Copy Code' }}
+                  </button>
+                </div>
+                <pre class="code-preview"><code>{{ engine.generateML4TPythonScript('MARKETSIM', selectedTicker) }}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 8: STRATEGY LEARNER (Q-LEARNING) -->
+        <div *ngIf="activeMl4tTab() === 'Q_LEARNING'" class="ml4t-content">
+          <div class="stage-grid">
+            <div class="config-panel">
+              <h4 class="panel-heading">Reinforcement Learning Strategy Learner</h4>
+              <p class="project-summary">
+                <strong>What it teaches:</strong> A Tabular Q-Learner agent that discretizes market technical indicators into 27 discrete states and learns when to take LONG (+1000), FLAT (0), or SHORT (-1000) positions through trial and error.
+              </p>
+              <div class="edge-box">
+                <strong>Indicator State Discretization:</strong>
+                <p>Features: Bollinger Bands %B (3 levels) × Price/SMA 50 (3 levels) × 10d Momentum (3 levels) = 27 discrete states. Q-Table shape: 27 × 3 actions.</p>
+              </div>
+
+              <button class="primary-action-btn full-w" [disabled]="isTrainingQ()" (click)="runQLearner()">
+                <span *ngIf="!isTrainingQ()">🤖 Train Q-Learning Agent (25 Episodes)</span>
+                <span *ngIf="isTrainingQ()">⏳ Training RL Agent...</span>
+              </button>
+            </div>
+
+            <div class="hypothesis-panel" *ngIf="qLearningResult() as q">
+              <div class="kpi-grid">
+                <div class="kpi-card" [class.positive]="q.trainedReturnPercent >= 0" [class.negative]="q.trainedReturnPercent < 0">
+                  <span class="kpi-label">Trained Agent Return</span>
+                  <span class="kpi-val">{{ q.trainedReturnPercent >= 0 ? '+' : '' }}{{ q.trainedReturnPercent }}%</span>
+                  <span class="kpi-sub">vs Benchmark {{ q.benchmarkReturnPercent }}%</span>
+                </div>
+                <div class="kpi-card good-sharpe">
+                  <span class="kpi-label">Trained Sharpe Ratio</span>
+                  <span class="kpi-val">{{ q.trainedSharpeRatio }}</span>
+                  <span class="kpi-sub">Annualized risk-adjusted reward</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Q-Table State-Action Pairs</span>
+                  <span class="kpi-val">{{ q.qTableSize }}</span>
+                  <span class="kpi-sub">27 states × 3 actions</span>
+                </div>
+              </div>
+
+              <!-- Episode Training Curve Log -->
+              <div class="trades-box">
+                <h4>Episode Learning Progress (Reward & Sharpe)</h4>
+                <div class="table-scroll mini">
+                  <table class="quant-table">
+                    <thead>
+                      <tr>
+                        <th>Episode</th>
+                        <th>Cumulative Reward ($)</th>
+                        <th>Final Equity ($)</th>
+                        <th>Sharpe Ratio</th>
+                        <th>Trades</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let ep of q.episodes">
+                        <td>Episode {{ ep.episode }}</td>
+                        <td [class.bull]="ep.cumulativeReward > 0" [class.bear]="ep.cumulativeReward < 0">
+                          {{ ep.cumulativeReward >= 0 ? '+' : '' }}\${{ ep.cumulativeReward | number }}
+                        </td>
+                        <td>\${{ ep.finalPortfolioValue | number }}</td>
+                        <td>{{ ep.sharpeRatio }}</td>
+                        <td>{{ ep.tradesCount }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="python-export-card">
+                <div class="export-header">
+                  <span class="export-tag">GEORGIA TECH Q-LEARNER (StrategyLearner.py & QLearner.py)</span>
+                  <button class="copy-btn" (click)="copyMl4tCode('Q_LEARNING')">
+                    {{ copiedMl4tPython() ? '✓ Copied!' : '📋 Copy Code' }}
+                  </button>
+                </div>
+                <pre class="code-preview"><code>{{ engine.generateML4TPythonScript('Q_LEARNING', selectedTicker) }}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -2057,6 +2419,60 @@ export type LifecycleStage = 1 | 2 | 3 | 4 | 5;
     .drag-val { color: #38bdf8; font-weight: 700; }
     .drag-desc { font-size: 0.72rem; color: #94a3b8; margin: 0; }
 
+    /* Georgia Tech ML4T Lab Styles */
+    .ml4t-pill {
+      background: rgba(147, 51, 234, 0.25) !important;
+      border-color: rgba(168, 85, 247, 0.5) !important;
+      color: #d8b4fe !important;
+    }
+    .ml4t-pill:hover, .ml4t-pill.active-lab {
+      background: #7e22ce !important;
+      color: #ffffff !important;
+      border-color: #a855f7 !important;
+    }
+
+    .gt-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #fbbf24;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+
+    .ml4t-tabs-nav {
+      display: flex;
+      gap: 0.75rem;
+      background: #090e1f;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      overflow-x: auto;
+    }
+
+    .ml4t-tab-btn {
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .ml4t-tab-btn:hover {
+      background: #1e293b;
+      color: #ffffff;
+    }
+    .ml4t-tab-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #3b82f6;
+    }
+    .dot.yellow { background: #fbbf24; }
+    .project-summary { font-size: 0.85rem; color: #cbd5e1; line-height: 1.45; margin: 0; }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -2072,6 +2488,20 @@ export class StrategyLifecycleComponent implements OnInit, OnDestroy {
   readonly engine = inject(StrategyEngineService);
 
   readonly Math = Math;
+
+  // Georgia Tech ML4T View & State
+  readonly activeView = signal<'lifecycle' | 'ml4t'>('lifecycle');
+  readonly activeMl4tTab = signal<ML4TProjectTab>('TOS');
+
+  gtCommission = 9.95;
+  gtImpact = 0.005;
+
+  readonly tosResult = signal<TOSResult | null>(null);
+  readonly portfolioOptResult = signal<PortfolioOptimizationResult | null>(null);
+  readonly marketsimResult = signal<MarketsimResult | null>(null);
+  readonly qLearningResult = signal<QLearningResult | null>(null);
+  readonly isTrainingQ = signal<boolean>(false);
+  readonly copiedMl4tPython = signal<boolean>(false);
 
   // Active Stage Signal
   readonly currentStage = signal<LifecycleStage>(1);
@@ -2272,6 +2702,78 @@ export class StrategyLifecycleComponent implements OnInit, OnDestroy {
       navigator.clipboard.writeText(script);
       this.copiedPython.set(true);
       setTimeout(() => this.copiedPython.set(false), 2000);
+    }
+  }
+
+  // ==========================================
+  // GEORGIA TECH ML4T LAB METHODS
+  // ==========================================
+  toggleMl4tView() {
+    this.activeView.set(this.activeView() === 'lifecycle' ? 'ml4t' : 'lifecycle');
+    if (this.activeView() === 'ml4t' && !this.tosResult()) {
+      this.runTOS();
+    }
+  }
+
+  selectMl4tTab(tab: ML4TProjectTab) {
+    this.activeMl4tTab.set(tab);
+    if (tab === 'TOS' && !this.tosResult()) this.runTOS();
+    if (tab === 'PORTFOLIO_OPTIMIZATION' && !this.portfolioOptResult()) this.runPortfolioOpt();
+    if (tab === 'MARKETSIM' && !this.marketsimResult()) this.runMarketsimTest();
+    if (tab === 'Q_LEARNING' && !this.qLearningResult()) this.runQLearner();
+  }
+
+  runTOS() {
+    const stock = this.currentSelectedStock();
+    if (!stock || !stock.candles) return;
+    const res = this.engine.runTheoreticallyOptimalStrategy(
+      stock.candles,
+      stock.symbol,
+      100000,
+      this.gtCommission,
+      this.gtImpact
+    );
+    this.tosResult.set(res);
+  }
+
+  runPortfolioOpt() {
+    const stocks = this.availableStocks();
+    if (stocks.length === 0) return;
+    const res = this.engine.optimizePortfolio(stocks);
+    this.portfolioOptResult.set(res);
+  }
+
+  runMarketsimTest() {
+    const stock = this.currentSelectedStock();
+    if (!stock || !stock.candles || stock.candles.length < 10) return;
+    const c = stock.candles;
+    const orders = [
+      { date: c[Math.floor(c.length * 0.1)].date, symbol: stock.symbol, order: 'BUY' as const, shares: 1000 },
+      { date: c[Math.floor(c.length * 0.4)].date, symbol: stock.symbol, order: 'SELL' as const, shares: 500 },
+      { date: c[Math.floor(c.length * 0.6)].date, symbol: stock.symbol, order: 'BUY' as const, shares: 1000 },
+      { date: c[Math.floor(c.length * 0.85)].date, symbol: stock.symbol, order: 'SELL' as const, shares: 1500 }
+    ];
+    const res = this.engine.runMarketsim(orders, c, stock.symbol, 100000, this.gtCommission, this.gtImpact);
+    this.marketsimResult.set(res);
+  }
+
+  runQLearner() {
+    const stock = this.currentSelectedStock();
+    if (!stock || !stock.candles) return;
+    this.isTrainingQ.set(true);
+    setTimeout(() => {
+      const res = this.engine.runQLearningStrategy(stock.candles, stock.symbol, 25);
+      this.qLearningResult.set(res);
+      this.isTrainingQ.set(false);
+    }, 150);
+  }
+
+  copyMl4tCode(project: ML4TProjectTab) {
+    const script = this.engine.generateML4TPythonScript(project, this.selectedTicker);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(script);
+      this.copiedMl4tPython.set(true);
+      setTimeout(() => this.copiedMl4tPython.set(false), 2000);
     }
   }
 }
