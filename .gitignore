@@ -31,3 +31,4 @@ yarn-error.log
 .angular/cache
 .DS_Store
 *.log
+.vercel
