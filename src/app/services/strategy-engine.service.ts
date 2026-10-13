@@ -1017,25 +1017,32 @@ export class StrategyEngineService {
   // 8. PYTHON CODE GENERATION (EDUCATIONAL BRIDGE)
   // ==========================================
   generatePythonScript(strategy: TradingStrategyConfig, symbol: string): string {
-    return `"""
+    return `\"\"\"
 AURA AI QUANT ENGINE • PYTHON STRATEGY EXPORT
 Stack:
   - Data: yfinance
-  - Indicators: pandas-ta
+  - Indicators: pandas-ta (or pandas-ta-classic)
   - Backtest Engine: backtesting.py
   - Portfolio Analytics: quantstats
-"""
+\"\"\"
 
 import yfinance as yf
 import pandas as pd
-import pandas_ta as ta
+
+# Support both pandas_ta and pandas_ta_classic (Python 3.11+ drop-in)
+try:
+    import pandas_ta as ta
+except ModuleNotFoundError:
+    import pandas_ta_classic as ta
+
 from backtesting import Backtest, Strategy
 from backtesting.lib import crossover
 import quantstats as qs
 
 # 1. Fetch Market Data via yfinance
+symbol = '${symbol}'
 print(f"Downloading historical OHLCV data for {symbol}...")
-df = yf.download('${symbol}', period='1y', interval='1d')
+df = yf.download(symbol, period='1y', interval='1d')
 df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
 
 # Ensure column names match backtesting.py conventions
@@ -1089,8 +1096,9 @@ stats = bt.run()
 print("\\n=== BACKTESTING.PY PERFORMANCE RESULTS ===")
 print(stats)
 
-# Interactive Chart Output (Opens in browser)
-bt.plot(filename='strategy_backtest.html')
+# Interactive Chart Output (Saved to file, open in browser)
+bt.plot(filename='strategy_backtest.html', open_browser=False)
+print("\\n[SUCCESS] Interactive HTML backtest visualization saved to 'strategy_backtest.html'!")
 
 # 4. Generate Institutional QuantStats Tear Sheet
 # returns = pd.Series(stats['_equity_curve']['Equity']).pct_change().dropna()
