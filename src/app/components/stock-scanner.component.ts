@@ -47,7 +47,7 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
         <header class="app-header">
           <div class="brand-left">
             <div class="logo-box">
-              <span class="logo-icon">âš¡</span>
+              <span class="logo-icon">⚡</span>
             </div>
             <div>
               <div class="brand-title-row">
@@ -55,7 +55,7 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
                 <span class="pro-tag">QUANT SCANNER</span>
               </div>
               <p class="brand-subtitle">
-                Institutional-grade AI stock screening â€¢ Multi-factor Danelfin models â€¢ Real-time Firebase sync
+                Institutional-grade AI stock screening • Multi-factor Danelfin models • Real-time Firebase sync
               </p>
             </div>
           </div>
@@ -71,8 +71,8 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
               [disabled]="stockService.isSeeding()" 
               (click)="stockService.seedFirestoreDatabase()"
               title="Upload 100+ stock dataset to Firebase Cloud Firestore">
-              <span *ngIf="!stockService.isSeeding()">âš¡ Seed Firestore</span>
-              <span *ngIf="stockService.isSeeding()">â³ Seeding...</span>
+              <span *ngIf="!stockService.isSeeding()">⚡ Seed Firestore</span>
+              <span *ngIf="stockService.isSeeding()">⏳ Seeding...</span>
             </button>
           </div>
         </header>
@@ -85,7 +85,7 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
         <!-- 3. Conversational AI Prompt Bar -->
         <div class="ai-hero-box">
           <div class="ai-input-wrap">
-            <span class="ai-wand">ðŸ¤–</span>
+            <span class="ai-wand">🤖</span>
             <input 
               type="text" 
               class="ai-input" 
@@ -111,11 +111,11 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
           <!-- Active AI Strategy Banner -->
           <div *ngIf="activeAiSummary()" class="ai-active-strategy">
             <div class="strategy-text">
-              <span class="sparkle">âœ¨</span>
+              <span class="sparkle">✨</span>
               <span>{{ activeAiSummary() }}</span>
               <span class="count-tag">{{ filteredStocks().length }} matching stocks</span>
             </div>
-            <button class="clear-ai-btn" (click)="clearAiFilter()">âœ• Clear AI Filter</button>
+            <button class="clear-ai-btn" (click)="clearAiFilter()">✕ Clear AI Filter</button>
           </div>
         </div>
 
@@ -131,8 +131,8 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
           <div class="macro-card">
             <span class="m-label">Market Breadth</span>
             <div class="breadth-val">
-              <span class="bull">â–² 76% Advancing</span>
-              <span class="bear">â–¼ 24% Decliners</span>
+              <span class="bull">▲ 76% Advancing</span>
+              <span class="bear">▼ 24% Decliners</span>
             </div>
           </div>
           <div class="macro-card">
@@ -157,19 +157,19 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
               class="view-tab-btn" 
               [class.active]="currentMainTab() === 'screener'" 
               (click)="currentMainTab.set('screener')">
-              ðŸ” AI Screener Table
+              🔍 AI Screener Table
             </button>
             <button 
               class="view-tab-btn" 
               [class.active]="currentMainTab() === 'heatmap'" 
               (click)="currentMainTab.set('heatmap')">
-              ðŸ—ºï¸ Sector Heatmap
+              🗺️ Sector Heatmap
             </button>
             <button 
               class="view-tab-btn" 
               [class.active]="currentMainTab() === 'watchlist'" 
               (click)="currentMainTab.set('watchlist')">
-              â­ Watchlist ({{ stockService.watchlist().length }})
+              ⭐ Watchlist ({{ stockService.watchlist().length }})
             </button>
             <button 
               class="view-tab-btn" 
@@ -182,7 +182,7 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
           <!-- Controls for Screener view -->
           <div class="right-controls" *ngIf="currentMainTab() === 'screener'">
             <button class="export-btn" (click)="exportCsv()">
-              â¬‡ï¸ Export CSV
+              ⬇️ Export CSV
             </button>
           </div>
         </div>
@@ -289,7 +289,7 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
                         [class.starred]="stockService.isInWatchlist(stock.symbol)" 
                         (click)="toggleWatchlist($event, stock.symbol)"
                         title="Toggle Watchlist">
-                        {{ stockService.isInWatchlist(stock.symbol) ? 'â˜…' : 'â˜†' }}
+                        {{ stockService.isInWatchlist(stock.symbol) ? 'â˜…' : '☆' }}
                       </button>
                       <span class="ticker-sym">{{ stock.symbol }}</span>
                     </div>
@@ -427,7 +427,7 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
           </div>
 
           <div *ngIf="watchlistStocks().length === 0" class="empty-wl">
-            <span class="empty-icon">â˜†</span>
+            <span class="empty-icon">☆</span>
             <p>Your watchlist is currently empty. Star tickers in the AI Screener to monitor them here.</p>
           </div>
 
@@ -471,8 +471,8 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
                   </td>
                   <td class="text-center" (click)="$event.stopPropagation()">
                     <div class="actions-cell">
-                      <button class="action-btn chart-action" (click)="openChart(stock)">ðŸ“Š Chart</button>
-                      <button class="action-btn" (click)="stockService.toggleWatchlist(stock.symbol)" style="color: #ef4444;">âœ• Remove</button>
+                      <button class="action-btn chart-action" (click)="openChart(stock)">📊 Chart</button>
+                      <button class="action-btn" (click)="stockService.toggleWatchlist(stock.symbol)" style="color: #ef4444;">✕ Remove</button>
                     </div>
                   </td>
                 </tr>
@@ -1098,12 +1098,12 @@ export class StockScannerComponent {
   ];
 
   readonly samplePrompts = [
-    'ðŸ”¥ Top AI Buys (Score 9+)',
-    'ðŸ’Ž Undervalued Tech (P/E < 25)',
-    'ðŸ“ˆ Breakouts Near 52W High',
-    'ðŸ’° Safe Dividend Yields > 3%',
-    'ðŸ“‰ Oversold Dip-Buys (RSI < 40)',
-    'âš¡ High Growth Semis (EPS > 20%)'
+    '🔥 Top AI Buys (Score 9+)',
+    '💎 Undervalued Tech (P/E < 25)',
+    '📈 Breakouts Near 52W High',
+    '💰 Safe Dividend Yields > 3%',
+    '📉 Oversold Dip-Buys (RSI < 40)',
+    '⚡ High Growth Semis (EPS > 20%)'
   ];
 
   readonly viewModes: { key: ScreenerViewMode; label: string }[] = [
