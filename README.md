@@ -1,4 +1,4 @@
-﻿# Aura AI • Institutional Stock Scanner & Screener
+# Aura AI • Institutional Stock Scanner & Screener
 
 A standalone, institutional-grade replica of modern AI stock screener platforms (inspired by **Danelfin**, **AInvest**, and **Finviz Elite**), built with **Angular 20** (Standalone Components, Signals, RxJS) and **Firebase Cloud Firestore**.
 
