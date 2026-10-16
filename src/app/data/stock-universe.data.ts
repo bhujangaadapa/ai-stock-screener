@@ -73,6 +73,15 @@ interface RawStockConfig {
 }
 
 const RAW_STOCKS: RawStockConfig[] = [
+  // --- INDICES & ETFS ---
+  {
+    symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust', sector: 'Indices & ETFs', industry: 'Index Fund / Macro',
+    price: 582.40, change: 2.10, changePercent: 0.36, marketCap: 560,
+    pe: 26.2, forwardPe: 22.4, peg: 1.85, ps: 3.2, pb: 4.8, dividendYield: 1.25, roe: 21.0,
+    debtToEquity: 0.05, freeCashFlow: 85.0, epsGrowth: 11.2, beta: 1.00, rsi14: 48.2,
+    sma50: 568.20, sma200: 554.00, volume: 54000000, avgVolume: 62000000, high52w: 588.60, low52w: 489.20,
+    targetPrice: 615.00, analystRating: 'Buy'
+  },
   // --- TECHNOLOGY & SEMICONDUCTORS ---
   {
     symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'Technology', industry: 'Semiconductors',

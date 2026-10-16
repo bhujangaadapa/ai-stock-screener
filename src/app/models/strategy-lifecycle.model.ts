@@ -233,3 +233,25 @@ export interface QLearningResult {
   qTableSize: number;
   bestEquityCurve: { date: string; qEquity: number; benchmarkEquity: number }[];
 }
+
+// ==========================================
+// STRATEGY PERFORMANCE TRACKER & REGISTRY
+// ==========================================
+export type TrackedStrategyStatus = 'BACKTESTED' | 'VALIDATED_OOS' | 'PAPER_TRADING' | 'LIVE' | 'ARCHIVED';
+
+export interface TrackedStrategy {
+  id: string;
+  name: string;
+  symbol: string;
+  type: StrategyType;
+  status: TrackedStrategyStatus;
+  createdAt: string;
+  lastUpdated: string;
+  config: TradingStrategyConfig;
+  settings: BacktestSettings;
+  metrics: PerformanceMetrics;
+  kellyFractionPercent: number;
+  equityCurveSummary: { date: string; equity: number }[];
+  oosDegradation?: number;
+  notes?: string;
+}

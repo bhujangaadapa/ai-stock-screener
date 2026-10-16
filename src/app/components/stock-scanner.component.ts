@@ -7,6 +7,8 @@ import { Stock, ScreenerViewMode, StockFilterCriteria, SectorPerformance } from 
 import { StockChartModalComponent } from './stock-chart-modal.component';
 import { StockDetailModalComponent } from './stock-detail-modal.component';
 import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
+import { GroupInsightsComponent } from './group-insights.component';
+import { GroupTradeInsight } from '../models/group-insight.model';
 
 @Component({
   selector: 'app-stock-scanner',
@@ -16,7 +18,8 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
     FormsModule,
     StockChartModalComponent,
     StockDetailModalComponent,
-    StrategyLifecycleComponent
+    StrategyLifecycleComponent,
+    GroupInsightsComponent
   ],
   template: `
     <div class="scanner-root">
@@ -176,6 +179,12 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
               [class.active]="currentMainTab() === 'strategy'" 
               (click)="currentMainTab.set('strategy')">
               🚀 Strategy Lifecycle & Lab
+            </button>
+            <button 
+              class="view-tab-btn wa-tab-btn" 
+              [class.active]="currentMainTab() === 'insights'" 
+              (click)="currentMainTab.set('insights')">
+              💬 WhatsApp & Group Insights
             </button>
           </div>
 
@@ -484,6 +493,14 @@ import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
         <!-- ================= VIEW 4: STRATEGY LIFECYCLE LAB ================= -->
         <div *ngIf="currentMainTab() === 'strategy'" class="strategy-section">
           <app-strategy-lifecycle></app-strategy-lifecycle>
+        </div>
+
+        <!-- ================= VIEW 5: WHATSAPP & GROUP INSIGHTS ================= -->
+        <div *ngIf="currentMainTab() === 'insights'" class="insights-section">
+          <app-group-insights 
+            (launchQuantLab)="handleLaunchInsightStrategy($event)"
+            (inspectChart)="handleInspectInsightChart($event)">
+          </app-group-insights>
         </div>
       </div>
 
@@ -1065,7 +1082,7 @@ export class StockScannerComponent {
   readonly aiScreener = inject(AiScreenerService);
 
   // Active View Tabs
-  readonly currentMainTab = signal<'screener' | 'heatmap' | 'watchlist' | 'strategy'>('screener');
+  readonly currentMainTab = signal<'screener' | 'heatmap' | 'watchlist' | 'strategy' | 'insights'>('screener');
   readonly activeViewMode = signal<ScreenerViewMode>('overview');
 
   // AI & Search state
@@ -1249,6 +1266,31 @@ export class StockScannerComponent {
 
   launchStrategyLab(stock: Stock) {
     this.currentMainTab.set('strategy');
+  }
+
+  handleLaunchInsightStrategy(insight: GroupTradeInsight) {
+    this.currentMainTab.set('strategy');
+  }
+
+  handleInspectInsightChart(insight: GroupTradeInsight) {
+    const found = this.stockService.stocks().find(s => s.symbol.toUpperCase() === insight.symbol.toUpperCase());
+    if (found) {
+      this.selectedChartStock.set(found);
+    } else {
+      const fallback = this.stockService.stocks()[0];
+      if (fallback) {
+        this.selectedChartStock.set({
+          ...fallback,
+          symbol: insight.symbol,
+          name: insight.symbol === 'SPY' ? 'SPDR S&P 500 ETF Trust' : insight.symbol,
+          price: insight.currentPriceAtPost || 582.40,
+          sector: 'Indices & ETFs',
+          sma50: 568.20,
+          sma200: insight.triggerPrice || 554.00,
+          rsi14: 48.2
+        });
+      }
+    }
   }
 
   getScorePillClass(score: number): string {
