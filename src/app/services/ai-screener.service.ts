@@ -68,15 +68,21 @@ export class AiScreenerService {
       rationaleParts.push(`Dividend Yield ≥ ${criteria.minDividendYield}%`);
     }
 
-    // 4. Technical oversold / RSI
-    if (p.includes('oversold') || p.includes('dip') || p.includes('rebound') || p.includes('bounce') || p.includes('rsi <')) {
-      const rsiMatch = p.match(/rsi\s*(?:<|under|below)?\s*(\d+)/i);
-      if (rsiMatch && rsiMatch[1]) {
-        criteria.maxRsi = parseInt(rsiMatch[1], 10);
+    // 4. Technical oversold / RSI & Post-Earnings Dips
+    if (p.includes('oversold') || p.includes('dip') || p.includes('rebound') || p.includes('bounce') || p.includes('rsi <') || p.includes('earnings')) {
+      if (p.includes('earnings') || p.includes('pead') || p.includes('post-earnings')) {
+        criteria.minAiScore = 7;
+        criteria.maxRsi = 55;
+        rationaleParts.push('Post-Earnings Dip Hunter: High-conviction AI Score >= 7 absorbing pullback');
       } else {
-        criteria.maxRsi = 45;
+        const rsiMatch = p.match(/rsi\s*(?:<|under|below)?\s*(\d+)/i);
+        if (rsiMatch && rsiMatch[1]) {
+          criteria.maxRsi = parseInt(rsiMatch[1], 10);
+        } else {
+          criteria.maxRsi = 45;
+        }
+        rationaleParts.push(`RSI(14) <= ${criteria.maxRsi} (Oversold Dip)`);
       }
-      rationaleParts.push(`RSI(14) ≤ ${criteria.maxRsi} (Oversold)`);
     }
 
     // 5. Momentum / Breakout / 52W High

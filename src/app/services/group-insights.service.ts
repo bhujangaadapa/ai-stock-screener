@@ -29,11 +29,37 @@ export class GroupInsightsService {
   private loadInsights(): void {
     if (typeof window === 'undefined') return;
 
+    const msftInsight: GroupTradeInsight = {
+      id: 'msft-earnings-dip-04',
+      member: '~ ~KRK',
+      phoneOrHandle: '+1 (716) 430-4227',
+      symbol: 'MSFT',
+      direction: 'LONG',
+      setupType: 'Post-Earnings Dip into 200 MA Support',
+      messageText: 'MSFT initial reaction down -4% on cloud guidance/CapEx noise. Tapped the 200 MA zone ($412-$415). Monster $74B cash flow machine. This dip will get bought quickly, loading for $460+ rebound.',
+      chartNotes: 'Daily ThinkorSwim chart. Post-earnings knee-jerk drop landed directly on the 200-day SMA ($412.30) with RSI cooling to 38. Classic institutional overreaction dip absorption.',
+      currentPriceAtPost: 422.50,
+      triggerPrice: 413.50, // 200 MA level
+      targetPrice: 468.00,
+      stopLossPrice: 405.00,
+      status: 'ACTIVE',
+      date: '2026-10-31',
+      time: '9:35 AM',
+      source: 'WhatsApp',
+      channelName: 'Alpha Swing Traders WA',
+      votesUp: 18,
+      tags: ['Earnings Dip', '200 MA', 'MSFT', 'Tech Giant']
+    };
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          if (!parsed.some((i: any) => i.id === 'msft-earnings-dip-04')) {
+            parsed.splice(1, 0, msftInsight);
+            this.saveToStorage(parsed);
+          }
           this._insights.set(parsed);
           return;
         }
@@ -65,6 +91,7 @@ export class GroupInsightsService {
         votesUp: 14,
         tags: ['200 MA', 'Trendline Break', 'Dip Buyer', 'Index ETF']
       },
+      msftInsight,
       {
         id: 'seed-nvda-breakout-02',
         member: 'Alex_Quant',

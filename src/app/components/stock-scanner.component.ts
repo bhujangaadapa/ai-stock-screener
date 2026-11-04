@@ -1115,6 +1115,7 @@ export class StockScannerComponent {
   ];
 
   readonly samplePrompts = [
+    '🎯 Post-Earnings Dips (Score 7+)',
     '🔥 Top AI Buys (Score 9+)',
     '💎 Undervalued Tech (P/E < 25)',
     '📈 Breakouts Near 52W High',

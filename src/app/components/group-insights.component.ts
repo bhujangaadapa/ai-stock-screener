@@ -173,16 +173,68 @@ import { GroupTradeInsight, TradeDirection, InsightStatus, InsightSource } from 
         </div>
       </div>
 
-      <!-- Educational Concept Callout (Focused on KRK's SPY 200 MA Trade) -->
+      <!-- Educational Concept Callout (Focused on KRK's SPY 200 MA Trade & MSFT Earnings Dip) -->
       <div class="concept-explainer-box">
         <div class="explainer-header">
-          <div class="tag-row">
-            <span class="concept-tag">MASTERING THE CONCEPTS</span>
-            <span class="concept-subtag">Case Study: ~ ~KRK's SPY 200 MA Retest Call</span>
+          <div class="tag-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="concept-tag">MASTERING THE CONCEPTS</span>
+              <span class="concept-subtag">Institutional Playbooks & Case Studies</span>
+            </div>
+            <div class="case-study-switcher" style="display: flex; gap: 6px;">
+              <button 
+                type="button"
+                class="pill-btn" 
+                [class.active]="selectedCaseStudy() === 'MSFT'" 
+                (click)="selectedCaseStudy.set('MSFT')">
+                🔥 MSFT: Post-Earnings Dip & 200 MA Absorption
+              </button>
+              <button 
+                type="button"
+                class="pill-btn" 
+                [class.active]="selectedCaseStudy() === 'SPY'" 
+                (click)="selectedCaseStudy.set('SPY')">
+                📐 SPY: Trendline Breakdown to 200 MA
+              </button>
+            </div>
           </div>
         </div>
         
-        <div class="explainer-content-grid">
+        <!-- Case Study 1: MSFT Earnings Dip -->
+        <div *ngIf="selectedCaseStudy() === 'MSFT'" class="explainer-content-grid">
+          <div class="concept-card">
+            <div class="concept-icon">📢</div>
+            <div class="concept-body">
+              <h4>1. The Earnings Knee-Jerk & CapEx Noise</h4>
+              <p>
+                MSFT beat estimates, but headlines fixated on record $19B AI CapEx spend and Azure quarterly cadence, triggering an instant -4% retail sell-off. Retail panicked on headline noise.
+              </p>
+            </div>
+          </div>
+
+          <div class="concept-card">
+            <div class="concept-icon">🛡️</div>
+            <div class="concept-body">
+              <h4>2. The 200-Day MA Cushion ($412)</h4>
+              <p>
+                The post-earnings dip landed squarely on the rising 200-day SMA ($412.30). Elite compounders ($74B FCF, 38.8% ROE) rarely break the 200 MA on CapEx investments—institutions absorbed the liquidity.
+              </p>
+            </div>
+          </div>
+
+          <div class="concept-card">
+            <div class="concept-icon">⏱️</div>
+            <div class="concept-body">
+              <h4>3. The 3-Day Rule (How to Trade It)</h4>
+              <p>
+                Never buy the Day 1 opening print. Let option delta unwind on Day 1. Look for a stabilization hammer at the 200 MA on Day 2. Enter on Day 3 with a stop under $405, targeting $468+.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case Study 2: SPY 200 MA Retest -->
+        <div *ngIf="selectedCaseStudy() === 'SPY'" class="explainer-content-grid">
           <div class="concept-card">
             <div class="concept-icon">📐</div>
             <div class="concept-body">
@@ -1096,6 +1148,7 @@ export class GroupInsightsComponent {
   readonly launchQuantLab = output<GroupTradeInsight>();
   readonly inspectChart = output<GroupTradeInsight>();
 
+  readonly selectedCaseStudy = signal<'MSFT' | 'SPY'>('MSFT');
   readonly searchKeyword = signal('');
   readonly statusFilter = signal<'ALL' | InsightStatus>('ALL');
   readonly showAddModal = signal(false);
