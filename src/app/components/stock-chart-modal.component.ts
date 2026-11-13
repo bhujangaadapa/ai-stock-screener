@@ -21,7 +21,10 @@ import { Stock, HistoricalCandle } from '../models/stock.model';
                   {{ stock.change >= 0 ? '+' : '' }}\${{ stock.change.toFixed(2) }}
                   ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent.toFixed(2) }}%)
                 </span>
-                <span class="sector-tag">{{ stock.sector }} â€¢ {{ stock.industry }}</span>
+                <span class="sector-tag">{{ stock.sector }} • {{ stock.industry }}</span>
+                <span class="earnings-tag" [class.imminent]="stock.daysToEarnings >= 0 && stock.daysToEarnings <= 7">
+                  📅 Earnings: {{ stock.earningsDate | date:'MMM d' }} ({{ stock.daysToEarnings >= 0 ? 'In ' + stock.daysToEarnings + 'd' : (-stock.daysToEarnings) + 'd ago' }})
+                </span>
               </div>
             </div>
           </div>
@@ -231,6 +234,23 @@ import { Stock, HistoricalCandle } from '../models/stock.model';
     .sector-tag {
       font-size: 0.8rem;
       color: #94a3b8;
+    }
+    .earnings-tag {
+      font-size: 0.78rem;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.3rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .earnings-tag.imminent {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.4);
     }
     .close-btn {
       background: rgba(255, 255, 255, 0.06);

@@ -116,6 +116,15 @@ import { Stock } from '../models/stock.model';
                   <small>({{ getUpsidePct(stock.targetPrice, stock.price) }})</small>
                 </span>
               </div>
+              <div class="compass-item">
+                <span class="c-label">Earnings Calendar</span>
+                <span class="c-val" [style.color]="stock.daysToEarnings >= 0 && stock.daysToEarnings <= 7 ? '#fbbf24' : '#38bdf8'">
+                  {{ stock.earningsDate | date:'mediumDate' }}
+                  <small *ngIf="stock.daysToEarnings === 0">(🚨 Today)</small>
+                  <small *ngIf="stock.daysToEarnings > 0">(In {{ stock.daysToEarnings }}d)</small>
+                  <small *ngIf="stock.daysToEarnings < 0">({{ -stock.daysToEarnings }}d ago)</small>
+                </span>
+              </div>
             </div>
           </div>
 

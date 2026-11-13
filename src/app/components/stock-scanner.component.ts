@@ -225,6 +225,13 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                 <option [ngValue]="7">Score 7+ (Outperform)</option>
               </select>
 
+              <select class="filter-select" [(ngModel)]="selectedEarningsFilter" (change)="applyFilters()">
+                <option value="all">📅 All Earnings Dates</option>
+                <option value="upcoming_7d">⚠️ Earnings in 7 Days</option>
+                <option value="recent_14d">🎯 Post-Earnings Dips (Last 14d)</option>
+                <option value="upcoming_30d">📆 Next 30 Days</option>
+              </select>
+
               <input 
                 type="text" 
                 class="filter-search" 
@@ -252,6 +259,7 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                     <th (click)="toggleSort('marketCap')" class="sortable text-right">Market Cap</th>
                     <th (click)="toggleSort('pe')" class="sortable text-right">P/E</th>
                     <th (click)="toggleSort('rsi14')" class="sortable text-right">RSI(14)</th>
+                    <th (click)="toggleSort('daysToEarnings')" class="sortable text-center">Earnings Date</th>
                     <th (click)="toggleSort('volume')" class="sortable text-right">Volume</th>
                     <th class="text-center">Trend</th>
                   </ng-container>
@@ -271,6 +279,7 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                     <th (click)="toggleSort('rsi14')" class="sortable text-right">RSI (14)</th>
                     <th (click)="toggleSort('sma50')" class="sortable text-right">SMA 50</th>
                     <th (click)="toggleSort('sma200')" class="sortable text-right">SMA 200</th>
+                    <th (click)="toggleSort('daysToEarnings')" class="sortable text-center">Earnings Date</th>
                     <th (click)="toggleSort('beta')" class="sortable text-right">Beta</th>
                     <th class="text-center">52W Range</th>
                   </ng-container>
@@ -330,6 +339,14 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                     <td class="text-right font-num" [style.color]="stock.rsi14 < 35 ? '#10b981' : (stock.rsi14 > 70 ? '#ef4444' : '#cbd5e1')">
                       {{ stock.rsi14.toFixed(1) }}
                     </td>
+                    <td class="text-center font-num">
+                      <div class="earnings-cell">
+                        <span class="earnings-date">{{ stock.earningsDate | date:'MMM d' }}</span>
+                        <span class="earnings-badge" [ngClass]="getEarningsBadgeClass(stock.daysToEarnings)">
+                          {{ getEarningsBadgeText(stock.daysToEarnings) }}
+                        </span>
+                      </div>
+                    </td>
                     <td class="text-right font-num">{{ formatVolume(stock.volume) }}</td>
                     <td class="text-center">
                       <svg class="sparkline-svg" viewBox="0 0 60 20">
@@ -359,6 +376,14 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                     <td class="text-right font-num">{{ stock.rsi14.toFixed(1) }}</td>
                     <td class="text-right font-num">\${{ stock.sma50.toFixed(2) }}</td>
                     <td class="text-right font-num">\${{ stock.sma200.toFixed(2) }}</td>
+                    <td class="text-center font-num">
+                      <div class="earnings-cell">
+                        <span class="earnings-date">{{ stock.earningsDate | date:'MMM d' }}</span>
+                        <span class="earnings-badge" [ngClass]="getEarningsBadgeClass(stock.daysToEarnings)">
+                          {{ getEarningsBadgeText(stock.daysToEarnings) }}
+                        </span>
+                      </div>
+                    </td>
                     <td class="text-right font-num">{{ stock.beta.toFixed(2) }}</td>
                     <td class="text-center">
                       <div class="range-bar-wrap">
@@ -1022,6 +1047,44 @@ import { GroupTradeInsight } from '../models/group-insight.model';
       transform: translateX(-50%);
     }
 
+    .earnings-cell {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+    .earnings-date {
+      font-weight: 700;
+      color: #f1f5f9;
+      font-size: 0.8rem;
+    }
+    .earnings-badge {
+      font-size: 0.68rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 0.25rem;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+    .earnings-badge.imminent {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .earnings-badge.post-dip {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .earnings-badge.upcoming {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+    .earnings-badge.reported {
+      background: rgba(148, 163, 184, 0.1);
+      color: #94a3b8;
+    }
+
     .actions-cell { display: flex; gap: 0.35rem; justify-content: center; }
     .action-btn {
       background: rgba(255, 255, 255, 0.05);
@@ -1093,6 +1156,7 @@ export class StockScannerComponent {
   // Manual Filter inputs
   selectedSector = '';
   selectedMinScore = 0;
+  selectedEarningsFilter: 'all' | 'upcoming_7d' | 'upcoming_30d' | 'recent_14d' = 'all';
   manualSearchText = '';
 
   // Sort State
@@ -1158,6 +1222,9 @@ export class StockScannerComponent {
     }
     if (this.selectedMinScore > 0) {
       criteria.minAiScore = this.selectedMinScore;
+    }
+    if (this.selectedEarningsFilter && this.selectedEarningsFilter !== 'all') {
+      criteria.earningsFilter = this.selectedEarningsFilter;
     }
 
     // Filter using AI Screener engine
@@ -1333,6 +1400,21 @@ export class StockScannerComponent {
       const y = height - ((p - min) / range) * height + 1;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
+  }
+
+  getEarningsBadgeClass(days: number): string {
+    if (days >= 0 && days <= 7) return 'imminent';
+    if (days > 7 && days <= 30) return 'upcoming';
+    if (days < 0 && days >= -14) return 'post-dip';
+    return 'reported';
+  }
+
+  getEarningsBadgeText(days: number): string {
+    if (days === 0) return '🚨 Today';
+    if (days > 0 && days <= 7) return `⚠️ In ${days}d`;
+    if (days > 7) return `In ${days}d`;
+    if (days < 0 && days >= -14) return `🎯 ${Math.abs(days)}d ago`;
+    return `${Math.abs(days)}d ago`;
   }
 
   formatVolume(v: number): string {

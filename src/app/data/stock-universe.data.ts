@@ -70,6 +70,7 @@ interface RawStockConfig {
   low52w: number;
   targetPrice: number;
   analystRating: 'Strong Buy' | 'Buy' | 'Hold' | 'Sell';
+  earningsOffsetDays?: number;
 }
 
 const RAW_STOCKS: RawStockConfig[] = [
@@ -401,15 +402,67 @@ const RAW_STOCKS: RawStockConfig[] = [
   }
 ];
 
+export const EARNINGS_CALENDAR_OFFSETS: Record<string, number> = {
+  'SPY': 8,
+  'NVDA': 8,   // In 8 days (Upcoming Q3/Q4 AI catalyst!)
+  'WMT': 7,    // In 7 days (Retail bellwether!)
+  'COST': 30,  // In 30 days
+  'AVGO': 28,  // In 28 days
+  'MU': 36,    // In 36 days
+  'QCOM': -6,  // Reported 6d ago
+  'ARM': -6,   // Reported 6d ago
+  'PLTR': -8,  // Reported 8d ago
+  'CEG': -8,   // Reported 8d ago
+  'ABBV': -11, // Reported 11d ago
+  'XOM': -11,  // Reported 11d ago
+  'CVX': -11,  // Reported 11d ago
+  'AAPL': -12, // Reported 12d ago
+  'AMZN': -12, // Reported 12d ago
+  'MA': -12,   // Reported 12d ago
+  'MRK': -12,  // Reported 12d ago (52W Low Value Rebound!)
+  'COP': -12,  // Reported 12d ago
+  'LIN': -12,  // Reported 12d ago
+  'MSFT': -13, // Reported 13d ago (200 MA Dip Absorption!)
+  'META': -13, // Reported 13d ago
+  'LLY': -13,  // Reported 13d ago
+  'CAT': -13,  // Reported 13d ago
+  'GOOGL': -14,// Reported 14d ago
+  'AMD': -14,  // Reported 14d ago
+  'V': -14,    // Reported 14d ago
+  'TSLA': -20, // Reported 20d ago
+  'BA': -20,   // Reported 20d ago
+  'NEE': -20,  // Reported 20d ago
+  'KO': -21,   // Reported 21d ago
+  'GE': -21,   // Reported 21d ago
+  'PG': -25,   // Reported 25d ago
+  'ISRG': -26, // Reported 26d ago
+  'BAC': -28,  // Reported 28d ago
+  'GS': -28,   // Reported 28d ago
+  'UNH': -28,  // Reported 28d ago
+  'JNJ': -28,  // Reported 28d ago
+  'JPM': -32,  // Reported 32d ago
+  'BLK': -32   // Reported 32d ago
+};
+
 export function getBundledStockUniverse(): Stock[] {
+  const now = new Date();
+
   return RAW_STOCKS.map(raw => {
     const { candles, sparkline } = generateCandles(raw.price, raw.beta * 0.015);
     
+    const offset = raw.earningsOffsetDays ?? EARNINGS_CALENDAR_OFFSETS[raw.symbol] ?? 14;
+    const eDate = new Date(now);
+    eDate.setDate(eDate.getDate() + offset);
+    const earningsDate = eDate.toISOString().split('T')[0];
+    const daysToEarnings = offset;
+
     // Preliminary mock score, will be overwritten by QuantScoringService
     const stock: Stock = {
       ...raw,
       sparkline,
       candles,
+      earningsDate,
+      daysToEarnings,
       aiScore: {
         overall: 8,
         winProbability: 75,

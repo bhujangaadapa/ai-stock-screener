@@ -53,6 +53,8 @@ export interface Stock {
   aiScore: AIScoreBreakdown;
   sparkline: number[];
   candles: HistoricalCandle[];
+  earningsDate: string; // e.g. '2026-11-20'
+  daysToEarnings: number; // positive = upcoming in X days, negative = reported X days ago
   aiReasonTag?: string; // dynamic tag when matched by AI query
   updatedAt?: any;
 }
@@ -72,6 +74,7 @@ export interface StockFilterCriteria {
   minEpsGrowth?: number;
   near52wHigh?: boolean;
   volumeSpike?: boolean;
+  earningsFilter?: 'all' | 'upcoming_7d' | 'upcoming_30d' | 'recent_14d';
 }
 
 export interface SectorPerformance {

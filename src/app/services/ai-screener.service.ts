@@ -70,10 +70,17 @@ export class AiScreenerService {
 
     // 4. Technical oversold / RSI & Post-Earnings Dips
     if (p.includes('oversold') || p.includes('dip') || p.includes('rebound') || p.includes('bounce') || p.includes('rsi <') || p.includes('earnings')) {
-      if (p.includes('earnings') || p.includes('pead') || p.includes('post-earnings')) {
+      if (p.includes('upcoming earnings') || p.includes('earnings soon') || p.includes('earnings this week')) {
+        criteria.earningsFilter = 'upcoming_7d';
+        rationaleParts.push('Upcoming Earnings: Reporting within 7 Days');
+      } else if (p.includes('earnings dip') || p.includes('post-earnings') || p.includes('pead') || p.includes('just reported')) {
+        criteria.earningsFilter = 'recent_14d';
         criteria.minAiScore = 7;
-        criteria.maxRsi = 55;
-        rationaleParts.push('Post-Earnings Dip Hunter: High-conviction AI Score >= 7 absorbing pullback');
+        criteria.maxRsi = 58;
+        rationaleParts.push('Post-Earnings Dip Hunter: Reported within 14 Days (AI Score >= 7)');
+      } else if (p.includes('earnings')) {
+        criteria.earningsFilter = 'upcoming_30d';
+        rationaleParts.push('Earnings Horizon: Active Q3/Q4 Earnings Calendar');
       } else {
         const rsiMatch = p.match(/rsi\s*(?:<|under|below)?\s*(\d+)/i);
         if (rsiMatch && rsiMatch[1]) {
@@ -177,6 +184,19 @@ export class AiScreenerService {
       // Volume spike
       if (criteria.volumeSpike && stock.volume < stock.avgVolume * 1.05) return false;
 
+      // Earnings Filter
+      if (criteria.earningsFilter) {
+        if (criteria.earningsFilter === 'upcoming_7d' && !(stock.daysToEarnings >= 0 && stock.daysToEarnings <= 7)) {
+          return false;
+        }
+        if (criteria.earningsFilter === 'recent_14d' && !(stock.daysToEarnings < 0 && stock.daysToEarnings >= -14)) {
+          return false;
+        }
+        if (criteria.earningsFilter === 'upcoming_30d' && !(stock.daysToEarnings >= 0 && stock.daysToEarnings <= 30)) {
+          return false;
+        }
+      }
+
       return true;
     }).map(stock => {
       // Annotate with dynamic AI reason tag
@@ -186,6 +206,11 @@ export class AiScreenerService {
       if (stock.dividendYield >= 2.0) reasons.push(`Div ${stock.dividendYield.toFixed(1)}%`);
       if (stock.rsi14 < 40) reasons.push(`RSI ${stock.rsi14.toFixed(0)} Oversold`);
       if (stock.price >= stock.high52w * 0.94) reasons.push('Near 52W High');
+      if (stock.daysToEarnings >= 0 && stock.daysToEarnings <= 7) {
+        reasons.push(`Earnings in ${stock.daysToEarnings}d`);
+      } else if (stock.daysToEarnings < 0 && stock.daysToEarnings >= -14) {
+        reasons.push(`Post-Earnings (${Math.abs(stock.daysToEarnings)}d ago)`);
+      }
 
       return {
         ...stock,
