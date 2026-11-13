@@ -46,4 +46,34 @@ describe('AI Stock Screener Services', () => {
     const result = aiScreener.parsePrompt('Oversold rebound with RSI < 40');
     expect(result.criteria.maxRsi).toBe(40);
   });
+
+  it('should parse Nasdaq 100 and S&P 500 index queries and filter properly', () => {
+    const nasdaqResult = aiScreener.parsePrompt('Find nasdaq 100 tech leaders');
+    expect(nasdaqResult.criteria.indexFilter).toBe('NASDAQ100');
+    expect(nasdaqResult.criteria.sector).toBe('Technology');
+
+    const nasdaqStocks = aiScreener.filterStocks(universe, nasdaqResult.criteria);
+    expect(nasdaqStocks.length).toBeGreaterThan(15);
+    for (const stock of nasdaqStocks) {
+      expect(stock.indices).toContain('NASDAQ100');
+      expect(stock.sector).toBe('Technology');
+    }
+
+    const sp500Result = aiScreener.parsePrompt('S&P 500 dividend stocks with yield > 3%');
+    expect(sp500Result.criteria.indexFilter).toBe('SP500');
+    const sp500Stocks = aiScreener.filterStocks(universe, sp500Result.criteria);
+    expect(sp500Stocks.length).toBeGreaterThan(5);
+    for (const stock of sp500Stocks) {
+      expect(stock.indices).toContain('SP500');
+      expect(stock.dividendYield).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('should contain comprehensive 100+ stock universe with valid benchmark index tags', () => {
+    expect(universe.length).toBeGreaterThanOrEqual(100);
+    const spCount = universe.filter(s => s.indices?.includes('SP500')).length;
+    const ndxCount = universe.filter(s => s.indices?.includes('NASDAQ100')).length;
+    expect(spCount).toBeGreaterThanOrEqual(80);
+    expect(ndxCount).toBeGreaterThanOrEqual(50);
+  });
 });

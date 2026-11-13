@@ -55,6 +55,7 @@ export interface Stock {
   candles: HistoricalCandle[];
   earningsDate: string; // e.g. '2026-11-20'
   daysToEarnings: number; // positive = upcoming in X days, negative = reported X days ago
+  indices?: ('SP500' | 'NASDAQ100')[];
   aiReasonTag?: string; // dynamic tag when matched by AI query
   updatedAt?: any;
 }
@@ -75,6 +76,7 @@ export interface StockFilterCriteria {
   near52wHigh?: boolean;
   volumeSpike?: boolean;
   earningsFilter?: 'all' | 'upcoming_7d' | 'upcoming_30d' | 'recent_14d';
+  indexFilter?: 'ALL' | 'SP500' | 'NASDAQ100';
 }
 
 export interface SectorPerformance {

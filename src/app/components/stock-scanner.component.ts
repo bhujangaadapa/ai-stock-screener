@@ -198,6 +198,37 @@ import { GroupTradeInsight } from '../models/group-insight.model';
 
         <!-- ================= VIEW 1: SCREENER TABLE ================= -->
         <div *ngIf="currentMainTab() === 'screener'" class="screener-section">
+          <!-- Benchmark Index Switcher Bar -->
+          <div class="index-switcher-bar">
+            <div class="index-filter-group">
+              <button 
+                class="index-pill-btn" 
+                [class.active]="selectedIndexFilter() === 'ALL'"
+                (click)="setIndexFilter('ALL')">
+                <span>🌐 All Universe</span>
+                <span class="idx-count">{{ totalUniverseCount() }}</span>
+              </button>
+              <button 
+                class="index-pill-btn" 
+                [class.active]="selectedIndexFilter() === 'NASDAQ100'"
+                (click)="setIndexFilter('NASDAQ100')">
+                <span>⚡ Nasdaq 100</span>
+                <span class="idx-count">{{ nasdaqCount() }}</span>
+              </button>
+              <button 
+                class="index-pill-btn" 
+                [class.active]="selectedIndexFilter() === 'SP500'"
+                (click)="setIndexFilter('SP500')">
+                <span>🏛️ S&P 500</span>
+                <span class="idx-count">{{ sp500Count() }}</span>
+              </button>
+            </div>
+            
+            <div class="index-stats-hint">
+              <span>Matching: <strong class="text-sky">{{ filteredStocks().length }}</strong> of {{ totalUniverseCount() }} institutional equities</span>
+            </div>
+          </div>
+
           <!-- Screener Sub-Nav & Filters -->
           <div class="table-controls-bar">
             <!-- View Mode Switcher -->
@@ -298,7 +329,7 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let stock of filteredStocks()" class="stock-row" (click)="openAiDossier(stock)">
+                <tr *ngFor="let stock of paginatedStocks()" class="stock-row" (click)="openAiDossier(stock)">
                   <!-- Ticker & Watchlist Star -->
                   <td>
                     <div class="ticker-col">
@@ -307,9 +338,13 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                         [class.starred]="stockService.isInWatchlist(stock.symbol)" 
                         (click)="toggleWatchlist($event, stock.symbol)"
                         title="Toggle Watchlist">
-                        {{ stockService.isInWatchlist(stock.symbol) ? 'â˜…' : '☆' }}
+                        {{ stockService.isInWatchlist(stock.symbol) ? '★' : '☆' }}
                       </button>
                       <span class="ticker-sym">{{ stock.symbol }}</span>
+                      <div class="ticker-badges">
+                        <span *ngIf="stock.indices?.includes('NASDAQ100')" class="idx-pill ndx" title="Nasdaq 100 Constituent">NDX</span>
+                        <span *ngIf="stock.indices?.includes('SP500')" class="idx-pill spx" title="S&P 500 Constituent">SPX</span>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -422,6 +457,33 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Institutional Pagination Bar -->
+          <div class="pagination-bar">
+            <div class="pagination-info">
+              Showing <strong>{{ paginationStart() }} - {{ paginationEnd() }}</strong> of <strong>{{ filteredStocks().length }}</strong> equities
+            </div>
+            <div class="pagination-controls" *ngIf="totalPages() > 1">
+              <button class="pg-btn" [disabled]="currentPage() === 1" (click)="prevPage()" title="Previous Page">‹ Prev</button>
+              <button 
+                *ngFor="let p of pageNumbers()" 
+                class="pg-btn" 
+                [class.active]="currentPage() === p"
+                (click)="setPage(p)">
+                {{ p }}
+              </button>
+              <button class="pg-btn" [disabled]="currentPage() >= totalPages()" (click)="nextPage()" title="Next Page">Next ›</button>
+            </div>
+            <div class="pagination-size">
+              <span>Per page:</span>
+              <select class="pg-select" [(ngModel)]="selectedPageSize" (change)="onPageSizeChange()">
+                <option [ngValue]="25">25</option>
+                <option [ngValue]="50">50</option>
+                <option [ngValue]="100">100</option>
+                <option [ngValue]="9999">All ({{ filteredStocks().length }})</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -971,6 +1033,155 @@ import { GroupTradeInsight } from '../models/group-insight.model';
     .bull { color: #10b981; }
     .bear { color: #ef4444; }
 
+    /* Index Switcher Bar */
+    .index-switcher-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .index-filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #090e17;
+      padding: 0.25rem;
+      border-radius: 0.6rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .index-pill-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.45rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .index-pill-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .index-pill-btn.active {
+      background: #1e293b;
+      color: #38bdf8;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    .idx-count {
+      font-size: 0.68rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+    }
+    .index-pill-btn.active .idx-count {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+    }
+    .index-stats-hint {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .text-sky { color: #38bdf8; font-weight: 700; }
+
+    .ticker-badges {
+      display: flex;
+      gap: 0.25rem;
+      margin-left: 0.25rem;
+    }
+    .idx-pill {
+      font-size: 0.58rem;
+      font-weight: 800;
+      padding: 0.1rem 0.3rem;
+      border-radius: 0.25rem;
+      letter-spacing: 0.02rem;
+      line-height: 1;
+    }
+    .idx-pill.ndx {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .idx-pill.spx {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    /* Pagination Bar */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #090e17;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: none;
+      border-radius: 0 0 0.75rem 0.75rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: -1px;
+    }
+    .pagination-info strong {
+      color: #f1f5f9;
+    }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .pg-btn {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 0.3rem 0.65rem;
+      border-radius: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      min-width: 32px;
+    }
+    .pg-btn:hover:not(:disabled) {
+      background: #1e293b;
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    .pg-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #3b82f6;
+    }
+    .pg-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .pagination-size {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .pg-select {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.4rem;
+      font-size: 0.78rem;
+      outline: none;
+      cursor: pointer;
+    }
+
     .ticker-col { display: flex; align-items: center; gap: 0.4rem; }
     .star-btn {
       background: transparent;
@@ -1153,6 +1364,17 @@ export class StockScannerComponent {
   activeAiSummary = signal<string>('');
   private activeCriteria = signal<StockFilterCriteria>({});
 
+  // Index Filter & Universe
+  selectedIndexFilter = signal<'ALL' | 'SP500' | 'NASDAQ100'>('ALL');
+  totalUniverseCount = computed(() => this.stockService.stocks().length);
+  sp500Count = computed(() => this.stockService.stocks().filter(s => s.indices?.includes('SP500')).length);
+  nasdaqCount = computed(() => this.stockService.stocks().filter(s => s.indices?.includes('NASDAQ100')).length);
+
+  // Pagination State
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(25);
+  selectedPageSize = 25;
+
   // Manual Filter inputs
   selectedSector = '';
   selectedMinScore = 0;
@@ -1179,12 +1401,13 @@ export class StockScannerComponent {
   ];
 
   readonly samplePrompts = [
+    '⚡ Nasdaq 100 Tech Momentum',
+    '🏛️ S&P 500 Value & 52W Lows',
     '🎯 Post-Earnings Dips (Score 7+)',
     '🔥 Top AI Buys (Score 9+)',
     '💎 Undervalued Tech (P/E < 25)',
     '📈 Breakouts Near 52W High',
     '💰 Safe Dividend Yields > 3%',
-    '📉 Oversold Dip-Buys (RSI < 40)',
     '⚡ High Growth Semis (EPS > 20%)'
   ];
 
@@ -1226,6 +1449,9 @@ export class StockScannerComponent {
     if (this.selectedEarningsFilter && this.selectedEarningsFilter !== 'all') {
       criteria.earningsFilter = this.selectedEarningsFilter;
     }
+    if (this.selectedIndexFilter() !== 'ALL') {
+      criteria.indexFilter = this.selectedIndexFilter();
+    }
 
     // Filter using AI Screener engine
     list = this.aiScreener.filterStocks(list, criteria);
@@ -1243,6 +1469,47 @@ export class StockScannerComponent {
       if (aVal > bVal) return asc ? 1 : -1;
       return 0;
     });
+  });
+
+  paginatedStocks = computed(() => {
+    const list = this.filteredStocks();
+    const size = this.pageSize();
+    if (size >= 9999) return list;
+    const start = (this.currentPage() - 1) * size;
+    return list.slice(start, start + size);
+  });
+
+  totalPages = computed(() => {
+    const total = this.filteredStocks().length;
+    const size = this.pageSize();
+    if (size >= 9999 || total === 0) return 1;
+    return Math.ceil(total / size);
+  });
+
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+    const maxVisible = 5;
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + maxVisible - 1);
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
+
+  paginationStart = computed(() => {
+    if (this.filteredStocks().length === 0) return 0;
+    return (this.currentPage() - 1) * this.pageSize() + 1;
+  });
+
+  paginationEnd = computed(() => {
+    const end = this.currentPage() * this.pageSize();
+    return Math.min(end, this.filteredStocks().length);
   });
 
   watchlistStocks = computed(() => {
@@ -1281,11 +1548,15 @@ export class StockScannerComponent {
 
   // Query Execution
   executeAiQuery() {
+    this.currentPage.set(1);
     if (!this.aiSearchQuery.trim()) {
       this.clearAiFilter();
       return;
     }
     const result = this.aiScreener.parsePrompt(this.aiSearchQuery);
+    if (result.criteria.indexFilter) {
+      this.selectedIndexFilter.set(result.criteria.indexFilter);
+    }
     this.activeCriteria.set(result.criteria);
     this.activeAiSummary.set(result.summary);
   }
@@ -1299,14 +1570,45 @@ export class StockScannerComponent {
     this.aiSearchQuery = '';
     this.activeCriteria.set({});
     this.activeAiSummary.set('');
+    this.selectedIndexFilter.set('ALL');
+    this.currentPage.set(1);
   }
 
   applyFilters() {
-    // Triggers computed update automatically via reactive signals
+    this.currentPage.set(1);
+  }
+
+  setIndexFilter(index: 'ALL' | 'SP500' | 'NASDAQ100') {
+    this.selectedIndexFilter.set(index);
+    this.currentPage.set(1);
+  }
+
+  setPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.set(this.currentPage() + 1);
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.set(this.currentPage() - 1);
+    }
+  }
+
+  onPageSizeChange() {
+    this.pageSize.set(this.selectedPageSize);
+    this.currentPage.set(1);
   }
 
   filterBySector(sector: string) {
     this.selectedSector = sector;
+    this.currentPage.set(1);
     this.currentMainTab.set('screener');
   }
 

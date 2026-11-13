@@ -45,6 +45,15 @@ export class AiScreenerService {
       rationaleParts.push('Sector: Industrials & Aerospace');
     }
 
+    // 1b. Index recognition (Nasdaq 100 / S&P 500)
+    if (p.includes('nasdaq') || p.includes('qqq') || p.includes('ndx')) {
+      criteria.indexFilter = 'NASDAQ100';
+      rationaleParts.push('Index: Nasdaq 100');
+    } else if (p.includes('s&p') || p.includes('sp500') || p.includes('s&p 500') || p.includes('spy') || p.includes('spx')) {
+      criteria.indexFilter = 'SP500';
+      rationaleParts.push('Index: S&P 500');
+    }
+
     // 2. Valuation / PE ratio
     if (p.includes('undervalued') || p.includes('cheap') || p.includes('value play') || p.includes('low pe') || p.includes('low p/e')) {
       // Check for explicit number (e.g. pe < 25)
@@ -193,6 +202,13 @@ export class AiScreenerService {
           return false;
         }
         if (criteria.earningsFilter === 'upcoming_30d' && !(stock.daysToEarnings >= 0 && stock.daysToEarnings <= 30)) {
+          return false;
+        }
+      }
+
+      // Index Filter (Nasdaq 100 / S&P 500)
+      if (criteria.indexFilter && criteria.indexFilter !== 'ALL') {
+        if (!stock.indices || !stock.indices.includes(criteria.indexFilter)) {
           return false;
         }
       }
