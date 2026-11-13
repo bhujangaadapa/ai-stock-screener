@@ -45,8 +45,11 @@ export class AiScreenerService {
       rationaleParts.push('Sector: Industrials & Aerospace');
     }
 
-    // 1b. Index recognition (Nasdaq 100 / S&P 500)
-    if (p.includes('nasdaq') || p.includes('qqq') || p.includes('ndx')) {
+    // 1b. Index recognition (Nasdaq 100 / S&P 500 / TOS)
+    if (p.includes('tos') || p.includes('thinkorswim') || p.includes('think or swim') || p.includes('imported')) {
+      criteria.indexFilter = 'TOS_IMPORT';
+      rationaleParts.push('Filter: ThinkorSwim (TOS) Imported Scans');
+    } else if (p.includes('nasdaq') || p.includes('qqq') || p.includes('ndx')) {
       criteria.indexFilter = 'NASDAQ100';
       rationaleParts.push('Index: Nasdaq 100');
     } else if (p.includes('s&p') || p.includes('sp500') || p.includes('s&p 500') || p.includes('spy') || p.includes('spx')) {
@@ -206,9 +209,13 @@ export class AiScreenerService {
         }
       }
 
-      // Index Filter (Nasdaq 100 / S&P 500)
-      if (criteria.indexFilter && criteria.indexFilter !== 'ALL') {
-        if (!stock.indices || !stock.indices.includes(criteria.indexFilter)) {
+      // Index & TOS Filter
+      if (criteria.indexFilter === 'TOS_IMPORT' || criteria.isTosOnly) {
+        if (!stock.isTosImported) {
+          return false;
+        }
+      } else if (criteria.indexFilter && criteria.indexFilter !== 'ALL') {
+        if (!stock.indices || !stock.indices.includes(criteria.indexFilter as 'SP500' | 'NASDAQ100')) {
           return false;
         }
       }

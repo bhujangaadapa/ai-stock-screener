@@ -56,6 +56,7 @@ export interface Stock {
   earningsDate: string; // e.g. '2026-11-20'
   daysToEarnings: number; // positive = upcoming in X days, negative = reported X days ago
   indices?: ('SP500' | 'NASDAQ100')[];
+  isTosImported?: boolean;
   aiReasonTag?: string; // dynamic tag when matched by AI query
   updatedAt?: any;
 }
@@ -76,7 +77,8 @@ export interface StockFilterCriteria {
   near52wHigh?: boolean;
   volumeSpike?: boolean;
   earningsFilter?: 'all' | 'upcoming_7d' | 'upcoming_30d' | 'recent_14d';
-  indexFilter?: 'ALL' | 'SP500' | 'NASDAQ100';
+  indexFilter?: 'ALL' | 'SP500' | 'NASDAQ100' | 'TOS_IMPORT';
+  isTosOnly?: boolean;
 }
 
 export interface SectorPerformance {

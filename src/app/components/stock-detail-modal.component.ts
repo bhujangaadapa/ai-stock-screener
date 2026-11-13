@@ -1,6 +1,7 @@
-﻿import { Component, Input, Output, EventEmitter } from '@angular/core';
+﻿import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Stock } from '../models/stock.model';
+import { TosIntegrationService } from '../services/tos-integration.service';
 
 @Component({
   selector: 'app-stock-detail-modal',
@@ -21,11 +22,16 @@ import { Stock } from '../models/stock.model';
                   {{ stock.change >= 0 ? '+' : '' }}\${{ stock.change.toFixed(2) }}
                   ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent.toFixed(2) }}%)
                 </span>
-                <span class="sector">{{ stock.sector }} â€¢ {{ stock.industry }}</span>
+                <span class="sector">{{ stock.sector }} • {{ stock.industry }}</span>
               </div>
             </div>
           </div>
-          <button class="close-btn" (click)="close.emit()">âœ•</button>
+          <div class="header-right-actions">
+            <button class="tos-header-btn" (click)="openTos()" title="Execute / Chart in ThinkorSwim">
+              🟢 ThinkorSwim
+            </button>
+            <button class="close-btn" (click)="close.emit()">✕</button>
+          </div>
         </div>
 
         <!-- Body Scrollable -->
@@ -243,6 +249,30 @@ import { Stock } from '../models/stock.model';
     .change.bull { background: rgba(16, 185, 129, 0.15); color: #10b981; }
     .change.bear { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
     .sector { font-size: 0.8rem; color: #94a3b8; }
+    .header-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tos-header-btn {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #10b981;
+      padding: 0.45rem 0.85rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .tos-header-btn:hover {
+      background: #10b981;
+      color: #042f2e;
+      transform: translateY(-1px);
+    }
     .close-btn {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -453,6 +483,12 @@ import { Stock } from '../models/stock.model';
 export class StockDetailModalComponent {
   @Input({ required: true }) stock!: Stock;
   @Output() close = new EventEmitter<void>();
+
+  readonly tosService = inject(TosIntegrationService);
+
+  openTos(): void {
+    this.tosService.openThinkorSwimWeb(this.stock.symbol);
+  }
 
   getScoreTheme(score: number): string {
     if (score >= 9) return 'theme-strong-buy';

@@ -160,6 +160,53 @@ export class FirestoreStockService {
   }
 
   /**
+   * Enriches and tags imported ThinkorSwim symbols. If any symbol is new, synthesizes it.
+   */
+  importTosStocks(symbols: string[], synthesizeFn: (symbol: string) => Stock): void {
+    const uppercaseSyms = symbols.map(s => s.toUpperCase());
+    const current = this.stocks();
+    const currentSyms = new Set(current.map(s => s.symbol.toUpperCase()));
+
+    // 1. Tag existing stocks
+    const updated = current.map(s => {
+      if (uppercaseSyms.includes(s.symbol.toUpperCase())) {
+        return { ...s, isTosImported: true };
+      }
+      return s;
+    });
+
+    // 2. Synthesize any missing stocks
+    for (const sym of uppercaseSyms) {
+      if (!currentSyms.has(sym)) {
+        const synthetic = synthesizeFn(sym);
+        const scored = {
+          ...synthetic,
+          isTosImported: true,
+          aiScore: this.quantScorer.computeAIScore(synthetic)
+        };
+        updated.push(scored);
+        currentSyms.add(sym);
+      }
+    }
+
+    this.stocks.set(updated);
+  }
+
+  /**
+   * Clears ThinkorSwim import tags from all stocks.
+   */
+  clearTosImportTags(): void {
+    const updated = this.stocks().map(s => {
+      if (s.isTosImported) {
+        const { isTosImported, ...rest } = s;
+        return rest as Stock;
+      }
+      return s;
+    });
+    this.stocks.set(updated);
+  }
+
+  /**
    * Simulates a real-time price tick for dynamic visual testing.
    */
   simulateTick(symbol: string) {

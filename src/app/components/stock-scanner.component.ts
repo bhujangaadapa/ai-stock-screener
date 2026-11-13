@@ -8,6 +8,9 @@ import { StockChartModalComponent } from './stock-chart-modal.component';
 import { StockDetailModalComponent } from './stock-detail-modal.component';
 import { StrategyLifecycleComponent } from './strategy-lifecycle.component';
 import { GroupInsightsComponent } from './group-insights.component';
+import { TosActionModalComponent } from './tos-action-modal.component';
+import { TosImportModalComponent } from './tos-import-modal.component';
+import { TosIntegrationService } from '../services/tos-integration.service';
 import { GroupTradeInsight } from '../models/group-insight.model';
 
 @Component({
@@ -19,7 +22,9 @@ import { GroupTradeInsight } from '../models/group-insight.model';
     StockChartModalComponent,
     StockDetailModalComponent,
     StrategyLifecycleComponent,
-    GroupInsightsComponent
+    GroupInsightsComponent,
+    TosActionModalComponent,
+    TosImportModalComponent
   ],
   template: `
     <div class="scanner-root">
@@ -190,6 +195,9 @@ import { GroupTradeInsight } from '../models/group-insight.model';
 
           <!-- Controls for Screener view -->
           <div class="right-controls" *ngIf="currentMainTab() === 'screener'">
+            <button class="tos-import-btn" (click)="openTosImporter()" title="Import ThinkorSwim Watchlist or Scanner CSV">
+              📥 Import TOS Scan
+            </button>
             <button class="export-btn" (click)="exportCsv()">
               ⬇️ Export CSV
             </button>
@@ -221,6 +229,14 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                 (click)="setIndexFilter('SP500')">
                 <span>🏛️ S&P 500</span>
                 <span class="idx-count">{{ sp500Count() }}</span>
+              </button>
+              <button 
+                *ngIf="tosService.hasImportedSymbols()" 
+                class="index-pill-btn tos-pill" 
+                [class.active]="selectedIndexFilter() === 'TOS_IMPORT'"
+                (click)="setIndexFilter('TOS_IMPORT')">
+                <span>🟢 TOS Import</span>
+                <span class="idx-count">{{ tosService.importedCount() }}</span>
               </button>
             </div>
             
@@ -449,6 +465,9 @@ import { GroupTradeInsight } from '../models/group-insight.model';
                       <button class="action-btn ai-action" (click)="openAiDossier(stock)" title="AI Conviction Dossier">
                         🧠 Dossier
                       </button>
+                      <button class="action-btn tos-action" (click)="openTosModal(stock)" title="1-Click ThinkorSwim & Schwab Execution">
+                        🟢 TOS
+                      </button>
                       <button class="action-btn strategy-action" (click)="launchStrategyLab(stock)" title="Launch Strategy Lifecycle & Backtest Lab">
                         ⚡ Strategy
                       </button>
@@ -603,6 +622,20 @@ import { GroupTradeInsight } from '../models/group-insight.model';
         [stock]="selectedDossierStock()!" 
         (close)="selectedDossierStock.set(null)">
       </app-stock-detail-modal>
+
+      <!-- ThinkorSwim 1-Click Action Modal -->
+      <app-tos-action-modal 
+        *ngIf="selectedTosStock()" 
+        [stock]="selectedTosStock()!" 
+        (close)="selectedTosStock.set(null)">
+      </app-tos-action-modal>
+
+      <!-- ThinkorSwim Watchlist & Scanner Importer Modal -->
+      <app-tos-import-modal 
+        *ngIf="showTosImportModal()" 
+        (imported)="handleTosImported($event)" 
+        (close)="showTosImportModal.set(false)">
+      </app-tos-import-modal>
     </div>
   `,
   styles: [`
@@ -953,6 +986,48 @@ import { GroupTradeInsight } from '../models/group-insight.model';
       transition: all 0.15s;
     }
     .export-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+    .right-controls { display: flex; align-items: center; gap: 0.65rem; }
+    .tos-import-btn {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.22));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #10b981;
+      padding: 0.45rem 0.95rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .tos-import-btn:hover {
+      background: #10b981;
+      color: #042f2e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+    .action-btn.tos-action {
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.08);
+      font-weight: 700;
+    }
+    .action-btn.tos-action:hover {
+      background: #10b981;
+      color: #042f2e;
+      border-color: #10b981;
+    }
+    .index-pill-btn.tos-pill {
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10b981;
+    }
+    .index-pill-btn.tos-pill.active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border-color: #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    }
 
     /* Controls Bar within Screener */
     .table-controls-bar {
@@ -1354,6 +1429,11 @@ import { GroupTradeInsight } from '../models/group-insight.model';
 export class StockScannerComponent {
   readonly stockService = inject(FirestoreStockService);
   readonly aiScreener = inject(AiScreenerService);
+  readonly tosService = inject(TosIntegrationService);
+
+  // ThinkorSwim State
+  selectedTosStock = signal<Stock | null>(null);
+  showTosImportModal = signal<boolean>(false);
 
   // Active View Tabs
   readonly currentMainTab = signal<'screener' | 'heatmap' | 'watchlist' | 'strategy' | 'insights'>('screener');
@@ -1365,7 +1445,7 @@ export class StockScannerComponent {
   private activeCriteria = signal<StockFilterCriteria>({});
 
   // Index Filter & Universe
-  selectedIndexFilter = signal<'ALL' | 'SP500' | 'NASDAQ100'>('ALL');
+  selectedIndexFilter = signal<'ALL' | 'SP500' | 'NASDAQ100' | 'TOS_IMPORT'>('ALL');
   totalUniverseCount = computed(() => this.stockService.stocks().length);
   sp500Count = computed(() => this.stockService.stocks().filter(s => s.indices?.includes('SP500')).length);
   nasdaqCount = computed(() => this.stockService.stocks().filter(s => s.indices?.includes('NASDAQ100')).length);
@@ -1578,7 +1658,7 @@ export class StockScannerComponent {
     this.currentPage.set(1);
   }
 
-  setIndexFilter(index: 'ALL' | 'SP500' | 'NASDAQ100') {
+  setIndexFilter(index: 'ALL' | 'SP500' | 'NASDAQ100' | 'TOS_IMPORT') {
     this.selectedIndexFilter.set(index);
     this.currentPage.set(1);
   }
@@ -1632,6 +1712,20 @@ export class StockScannerComponent {
 
   openAiDossier(stock: Stock) {
     this.selectedDossierStock.set(stock);
+  }
+
+  openTosModal(stock: Stock) {
+    this.selectedTosStock.set(stock);
+  }
+
+  openTosImporter() {
+    this.showTosImportModal.set(true);
+  }
+
+  handleTosImported(symbols: string[]) {
+    this.stockService.importTosStocks(symbols, sym => this.tosService.synthesizeMissingStock(sym));
+    this.selectedIndexFilter.set('TOS_IMPORT');
+    this.currentPage.set(1);
   }
 
   launchStrategyLab(stock: Stock) {

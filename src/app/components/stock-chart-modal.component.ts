@@ -1,6 +1,7 @@
-﻿import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+﻿import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Stock, HistoricalCandle } from '../models/stock.model';
+import { TosIntegrationService } from '../services/tos-integration.service';
 
 @Component({
   selector: 'app-stock-chart-modal',
@@ -28,7 +29,12 @@ import { Stock, HistoricalCandle } from '../models/stock.model';
               </div>
             </div>
           </div>
-          <button class="close-btn" (click)="close.emit()">âœ•</button>
+          <div class="header-right-actions">
+            <button class="tos-header-btn" (click)="openTos()" title="Open in ThinkorSwim">
+              🟢 ThinkorSwim
+            </button>
+            <button class="close-btn" (click)="close.emit()">✕</button>
+          </div>
         </div>
 
         <!-- Controls Bar -->
@@ -252,6 +258,30 @@ import { Stock, HistoricalCandle } from '../models/stock.model';
       color: #fbbf24;
       border-color: rgba(245, 158, 11, 0.4);
     }
+    .header-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tos-header-btn {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #10b981;
+      padding: 0.45rem 0.85rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .tos-header-btn:hover {
+      background: #10b981;
+      color: #042f2e;
+      transform: translateY(-1px);
+    }
     .close-btn {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -391,6 +421,12 @@ import { Stock, HistoricalCandle } from '../models/stock.model';
 export class StockChartModalComponent {
   @Input({ required: true }) stock!: Stock;
   @Output() close = new EventEmitter<void>();
+
+  readonly tosService = inject(TosIntegrationService);
+
+  openTos(): void {
+    this.tosService.openThinkorSwimWeb(this.stock.symbol);
+  }
 
   readonly chartWidth = 900;
   readonly mainChartHeight = 310;
